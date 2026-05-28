@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Profile</title>
+</head>
+<body>
+
+  <a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+
+  <h1>{{ student.f_name }} {{ student.l_name }}</h1>
+  <p>Email: {{ student.email }}</p>
+  <p>Department: {{ student.department }}</p>
+  <p>CGPA: {{ student.cgpa }}</p>
+  <p>Phone: {{ student.phone }}</p>
+
+  {% if student.resume %}
+    <a href="{{ url_for('static', filename=student.resume.replace('static/', '').replace('\\', '/')) }}" target="_blank">View Resume</a>
+  {% endif %}
+
+  <a href="{{ url_for('student.edit_profile') }}">Edit Profile</a>
+
+</body>
+</html>

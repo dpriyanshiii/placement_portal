@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Companies</title>
+</head>
+<body>
+
+  <h1>Manage Companies</h1>
+  <a href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+
+  <h3>All Companies:</h3>
+  <form method="GET" action="{{ url_for('admin.manage_companies') }}">
+    <input type="text" name="q" placeholder="Search by company name" value="{{ request.args.get('q', '') }}">
+    <input type="hidden" name="filter" value="{{ request.args.get('filter', 'all') }}">
+    <button type="submit">Search</button>
+  </form>
+  <br>
+
+  <a href="{{ url_for('admin.manage_companies', filter='all', q=request.args.get('q', '')) }}">All</a>
+  |
+  <a href="{{ url_for('admin.manage_companies', filter='approved', q=request.args.get('q', '')) }}">Approved</a>
+  |
+  <a href="{{ url_for('admin.manage_companies', filter='pending', q=request.args.get('q', '')) }}">Pending</a>
+  |
+  <a href="{{ url_for('admin.manage_companies', filter='blacklisted', q=request.args.get('q', '')) }}">Blacklisted</a>
+
+  <p>Total: {{ companies|length }}</p>
+
+  {% for c in companies %}
+    <p>
+      {{ loop.index }}. {{ c.company_name }} |
+      {% if c.is_blacklisted %} Blacklisted
+      {% elif c.approval_status %} Approved
+      {% else %} Pending
+      {% endif %}
+      | <a href="{{ url_for('admin.company_detail', company_id=c.company_id) }}">View</a>
+    </p>
+  {% else %}
+    <p>No companies found.</p>
+  {% endfor %}
+
+</body>
+</html>

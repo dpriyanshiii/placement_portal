@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Profile</title>
+</head>
+<body>
+
+  <a href="{{ url_for('company.profile') }}">Back to Profile</a>
+
+  <h1>Edit Profile</h1>
+
+  <form method="POST" action="{{ url_for('company.edit_profile') }}">
+    <p>
+      HR First Name:<br>
+      <input type="text" name="hr_fname" value="{{ company.hr_fname }}" required>
+    </p>
+    <p>
+      HR Last Name:<br>
+      <input type="text" name="hr_lname" value="{{ company.hr_lname }}" required>
+    </p>
+    <p>
+      HR Email:<br>
+      <input type="email" name="hr_email" value="{{ company.hr_email }}" required>
+    </p>
+    <p>
+      Website:<br>
+      <input type="text" name="website" value="{{ company.website or '' }}">
+    </p>
+    <p>
+      Description:<br>
+      <textarea name="description">{{ company.description or '' }}</textarea>
+    </p>
+    <p>
+      <button type="submit">Save Changes</button>
+    </p>
+  </form>
+
+</body>
+</html>

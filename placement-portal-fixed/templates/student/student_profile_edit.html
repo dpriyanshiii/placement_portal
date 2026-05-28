@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Profile</title>
+</head>
+<body>
+
+  <a href="{{ url_for('student.profile') }}">Back to Profile</a>
+
+  <h1>Edit Profile</h1>
+
+  <form method="POST" action="{{ url_for('student.edit_profile') }}" enctype="multipart/form-data">
+    <p>
+      First Name:<br>
+      <input type="text" name="f_name" value="{{ student.f_name }}" required>
+    </p>
+    <p>
+      Last Name:<br>
+      <input type="text" name="l_name" value="{{ student.l_name }}" required>
+    </p>
+    <p>
+      Phone:<br>
+      <input type="text" name="phone" value="{{ student.phone or '' }}">
+    </p>
+    <p>
+      CGPA:<br>
+      <input type="number" step="0.01" name="cgpa" value="{{ student.cgpa or '' }}">
+    </p>
+    <p>
+      Department:<br>
+      <input type="text" name="department" value="{{ student.department or '' }}">
+    </p>
+    <p>
+      Resume (PDF only):<br>
+      <input type="file" name="resume" accept=".pdf">
+    </p>
+    <p>
+      <button type="submit">Save Changes</button>
+    </p>
+  </form>
+
+</body>
+</html>

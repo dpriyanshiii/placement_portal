@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Application Detail</title>
+</head>
+<body>
+
+  <a href="{{ url_for('company.drive_applications', drive_id=application.drive_id) }}">Back to Applications</a>
+
+  <h1>{{ application.student.f_name }} {{ application.student.l_name }}</h1>
+  <p>Email: {{ application.student.email }}</p>
+  <p>Department: {{ application.student.department }}</p>
+  <p>CGPA: {{ application.student.cgpa }}</p>
+  <p>Phone: {{ application.student.phone }}</p>
+
+  {% if application.student.resume %}
+    <a href="{{ url_for('static', filename=application.student.resume.replace('static/', '').replace('\\', '/')) }}" target="_blank">View Resume</a>
+  {% endif %}
+
+  <p>Applied On: {{ application.applied_time.strftime('%Y-%m-%d %H:%M') }}</p>
+  <p>Current Status: {{ application.status }}</p>
+  {% if application.remarks %}<p>Remarks: {{ application.remarks }}</p>{% endif %}
+
+  {% if not drive.status %}
+    <h2>Update Status</h2>
+    <form method="POST" action="{{ url_for('company.update_application', application_id=application.aplication_id) }}">
+      <select name="status">
+        <option value="waiting" {% if application.status == 'waiting' %}selected{% endif %}>Waiting</option>
+        <option value="shortlist" {% if application.status == 'shortlist' %}selected{% endif %}>Shortlist</option>
+        <option value="reject" {% if application.status == 'reject' %}selected{% endif %}>Reject</option>
+      </select>
+      <br>
+      <textarea name="remarks" placeholder="Remarks (optional)">{{ application.remarks or '' }}</textarea>
+      <br>
+      <button type="submit">Update</button>
+    </form>
+  {% endif %}
+
+</body>
+</html>

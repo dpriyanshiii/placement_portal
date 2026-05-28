@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Drive</title>
+</head>
+<body>
+
+  <h1>Edit Drive</h1>
+  <a href="{{ url_for('company.dashboard') }}">Back to Dashboard</a>
+
+  <form method="POST" action="{{ url_for('company.edit_drive', drive_id=drive.drive_id) }}">
+    <p>
+      Drive Name:<br>
+      <input type="text" name="drive_name" value="{{ drive.drive_name }}" required>
+    </p>
+    <p>
+      Job Title:<br>
+      <input type="text" name="job_title" value="{{ drive.job_title }}" required>
+    </p>
+    <p>
+      Job Description:<br>
+      <textarea name="job_description" required>{{ drive.job_description }}</textarea>
+    </p>
+    <p>
+      Eligibility Criteria:<br>
+      <textarea name="eligibility_criteria" required>{{ drive.eligibility_criteria }}</textarea>
+    </p>
+    <p>
+      Salary:<br>
+      <input type="number" step="0.01" name="salary" value="{{ drive.salary }}" required>
+    </p>
+    <p>
+      Location:<br>
+      <input type="text" name="location" value="{{ drive.location }}" required>
+    </p>
+    <p>
+      Application Deadline:<br>
+      <input type="datetime-local" name="deadline" value="{{ drive.deadline.strftime('%Y-%m-%dT%H:%M') }}" required>
+    </p>
+    <p>
+      <button type="submit">Save Changes</button>
+    </p>
+  </form>
+
+</body>
+</html>

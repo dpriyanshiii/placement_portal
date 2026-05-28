@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Application History</title>
+</head>
+<body>
+
+  <a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+
+  <h1>{{ student.f_name }} {{ student.l_name }}</h1>
+  <p>Department: {{ student.department }}</p>
+
+  <h2>Application History</h2>
+  {% for a in applications %}
+    <p>
+      {{ loop.index }}. {{ a.drive.drive_name }} | {{ a.drive.job_title }} |
+      Status: {{ a.status }}
+      {% if a.remarks %} | Remarks: {{ a.remarks }} {% endif %}
+    </p>
+  {% else %}
+    <p>No application history yet.</p>
+  {% endfor %}
+
+</body>
+</html>

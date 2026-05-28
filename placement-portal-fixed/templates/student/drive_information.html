@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ drive.drive_name }}</title>
+</head>
+<body>
+
+  <a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+
+  <h1>{{ drive.drive_name }}</h1>
+  <p>Job Title: {{ drive.job_title }}</p>
+  <p>Job Description: {{ drive.job_description }}</p>
+  <p>Eligibility: {{ drive.eligibility_criteria }}</p>
+  <p>Salary: {{ drive.salary }}</p>
+  <p>Location: {{ drive.location }}</p>
+  <p>Deadline: {{ drive.deadline.strftime('%Y-%m-%d %H:%M') }}</p>
+
+  <h2>Company</h2>
+  {% if company.logo %}
+    <img src="{{ url_for('static', filename=company.logo.replace('static/', '').replace('\\', '/')) }}" alt="Logo" width="80">
+  {% endif %}
+  <p>{{ company.company_name }}</p>
+
+  {% if not applied %}
+    {% if not drive.status %}
+      <form method="POST" action="{{ url_for('student.apply_drive', drive_id=drive.drive_id) }}">
+        <button type="submit">Apply</button>
+      </form>
+    {% else %}
+      <p>This drive is closed.</p>
+    {% endif %}
+  {% else %}
+    <p>You have already applied to this drive.</p>
+  {% endif %}
+
+</body>
+</html>

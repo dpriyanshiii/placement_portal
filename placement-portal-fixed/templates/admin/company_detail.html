@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ company.company_name }}</title>
+</head>
+<body>
+
+  <a href="{{ url_for('admin.manage_companies') }}">Back to Companies</a>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <p style="color: {{ 'green' if category == 'success' else 'red' }}"><strong>{{ message }}</strong></p>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <h1>{{ company.company_name }}</h1>
+
+  {% if company.logo %}
+    <img src="{{ url_for('static', filename=company.logo.replace('static/', '')) }}" alt="Logo" width="100">
+  {% endif %}
+
+  <p>Website: {{ company.website }}</p>
+  <p>Description: {{ company.description }}</p>
+  <p>HR: {{ company.hr_fname }} {{ company.hr_lname }} | {{ company.hr_email }}</p>
+  <p>Status:
+    {% if company.is_blacklisted %} Blacklisted
+    {% elif company.approval_status %} Approved
+    {% else %} Pending
+    {% endif %}
+  </p>
+
+  <form method="POST" action="{{ url_for('admin.blacklist_company', company_id=company.company_id) }}"
+        onsubmit="return confirm('{% if company.is_blacklisted %}Remove blacklist for {{ company.company_name }}?{% else %}Blacklist {{ company.company_name }}?{% endif %}')">
+    <button type="submit">
+      {% if company.is_blacklisted %} Remove Blacklist {% else %} Blacklist {% endif %}
+    </button>
+  </form>
+
+  {% if company.approval_status %}
+  <h2>Drives</h2>
+  <p>Total: {{ total_drives }} | Ongoing: {{ ongoing_drives }} | Students Hired: {{ students_hired }}</p>
+  {% for d in drives %}
+    <p>{{ loop.index }}. {{ d.drive_name }} | {{ d.job_title }} | Deadline: {{ d.deadline.strftime('%Y-%m-%d') }} |
+      {% if d.status %} Completed {% else %} Ongoing {% endif %}
+    </p>
+  {% else %}
+    <p>No drives yet.</p>
+  {% endfor %}
+  {% endif %}
+
+</body>
+</html>

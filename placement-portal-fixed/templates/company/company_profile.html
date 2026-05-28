@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Company Profile</title>
+</head>
+<body>
+
+  <a href="{{ url_for('company.dashboard') }}">Back to Dashboard</a>
+
+  <h1>{{ company.company_name }}</h1>
+
+  {% if company.logo %}
+    <img src="{{ url_for('static', filename=company.logo.replace('static/', '').replace('\\', '/')) }}" alt="Logo" width="100">
+  {% endif %}
+
+  <p>Email: {{ company.email }}</p>
+  <p>Website: <a href="{{ company.website }}" target="_blank">{{ company.website }}</a></p>
+  <p>Description: {{ company.description }}</p>
+  <p>HR Name: {{ company.hr_fname }} {{ company.hr_lname }}</p>
+  <p>HR Email: {{ company.hr_email }}</p>
+
+  <a href="{{ url_for('company.edit_profile') }}">Edit Profile</a>
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ drive.drive_name }} Applications</title>
+</head>
+<body>
+
+  <a href="{{ url_for('company.dashboard') }}">Back to Dashboard</a>
+
+  <h1>{{ drive.drive_name }}</h1>
+  <p>Job Title: {{ drive.job_title }}</p>
+  <p>Location: {{ drive.location }}</p>
+  <p>Deadline: {{ drive.deadline.strftime('%Y-%m-%d %H:%M') }}</p>
+  <p>Status: {% if drive.status %} Completed {% else %} Ongoing {% endif %}</p>
+
+  {% if not drive.status %}
+    <a href="{{ url_for('company.close_drive', drive_id=drive.drive_id) }}">Mark Complete</a>
+  {% endif %}
+
+  <h2>Applicants</h2>
+  <form method="GET" action="{{ url_for('company.drive_applications', drive_id=drive.drive_id) }}">
+    <input type="text" name="q" placeholder="Search by student name" value="{{ request.args.get('q', '') }}">
+    <button type="submit">Search</button>
+  </form>
+
+  {% for a in applications %}
+    <p>
+      {{ loop.index }}. {{ a.student.f_name }} {{ a.student.l_name }} |
+      {{ a.student.department }} |
+      Status: {{ a.status }}
+      | <a href="{{ url_for('company.application_detail', application_id=a.aplication_id) }}">Review Application</a>
+    </p>
+  {% else %}
+    <p>No applications yet.</p>
+  {% endfor %}
+
+</body>
+</html>

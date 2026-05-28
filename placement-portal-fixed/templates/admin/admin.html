@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+</head>
+<body>
+
+  <h1>Admin Dashboard</h1>
+  <a href="{{ url_for('auth.logout') }}">Log Out</a>
+
+
+  <h2>Overview</h2>
+  <p>Total Drives: {{ total_drives }}</p>
+  <p>Total Applications: {{ total_applications }}</p>
+  <p>Total Students: {{ total_students }}</p>
+  <p>Students Placed: {{ students_placed }}</p>
+  <p>Total Approved Companies: {{ total_companies }}</p>
+  <p>Pending Company Approvals: {{ pending_approvals }}</p>
+  
+
+  <h2>Manage</h2>
+  <a href="{{ url_for('admin.manage_students') }}">Manage Students</a>
+  <br>
+  <a href="{{ url_for('admin.manage_companies') }}">Manage Companies</a>
+  <br>
+  <a href="{{ url_for('admin.manage_drives') }}">Manage Drives</a>
+
+</body>
+</html>

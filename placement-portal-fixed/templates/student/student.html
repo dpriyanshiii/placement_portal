@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Dashboard</title>
+</head>
+<body>
+
+  <h1>Welcome, {{ student.f_name }} {{ student.l_name }}</h1>
+  <a href="{{ url_for('student.profile') }}">View Profile</a>
+  <br>
+  <a href="{{ url_for('student.history') }}">History</a>
+  <br>
+  <a href="{{ url_for('auth.logout') }}">Log Out</a>
+
+  <h2>Organizations with Active Drives</h2>
+  {% for c in companies %}
+    <p>
+      {{ loop.index }}. {{ c.company_name }}
+      | <a href="{{ url_for('student.company_view', company_id=c.company_id) }}">View Details</a>
+    </p>
+  {% else %}
+    <p>No active drives available right now.</p>
+  {% endfor %}
+
+  <h2>My Applications</h2>
+  {% for a in applications %}
+    <p>
+      {{ loop.index }}. {{ a.drive.drive_name }} | {{ a.drive.job_title }} |
+      Status: {{ a.status }}
+      | <a href="{{ url_for('student.drive_view', drive_id=a.drive_id) }}">View Drive</a>
+    </p>
+  {% else %}
+    <p>You have not applied to any drives yet.</p>
+  {% endfor %}
+
+</body>
+</html>

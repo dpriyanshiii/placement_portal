@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Students</title>
+</head>
+<body>
+
+  <h1>Manage Students</h1>
+  <a href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+
+  <h2>Search</h2>
+  <form method="GET" action="{{ url_for('admin.manage_students') }}">
+    <input type="text" name="q" placeholder="Search by name, ID, or phone" value="{{ request.args.get('q', '') }}">
+    <button type="submit">Search</button>
+  </form>
+
+  <h3>All Students:</h3>
+  {% for s in students %}
+    <p>
+      {{ loop.index }}. {{ s.f_name }} {{ s.l_name }} | {{ s.department }} | CGPA: {{ s.cgpa }} |
+      {% if s.is_blacklisted %} Blacklisted {% else %} Active {% endif %}
+      | <a href="{{ url_for('admin.student_detail', student_id=s.student_id) }}">View</a>
+    </p>
+  {% else %}
+    <p>No students found.</p>
+  {% endfor %}
+
+</body>
+</html>

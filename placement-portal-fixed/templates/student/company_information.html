@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ company.company_name }}</title>
+</head>
+<body>
+
+  <a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+  <br>
+  <a href="{{ url_for('student.history') }}">History</a>
+  <br>
+  <a href="{{ url_for('auth.logout') }}">Log Out</a>
+
+  <h1>{{ company.company_name }}</h1>
+  <p>{{ company.description }}</p>
+  <p>Website: {{ company.website }}</p>
+
+  <h2>Ongoing Drives</h2>
+  {% for d in drives %}
+    <p>
+      {{ loop.index }}. {{ d.drive_name }} | {{ d.job_title }} | Deadline: {{ d.deadline.strftime('%Y-%m-%d') }}
+      | <a href="{{ url_for('student.drive_view', drive_id=d.drive_id) }}">View Drive</a>
+    </p>
+  {% else %}
+    <p>No ongoing drives.</p>
+  {% endfor %}
+
+</body>
+</html>

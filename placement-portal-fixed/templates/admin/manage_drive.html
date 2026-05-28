@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Drives</title>
+</head>
+<body>
+
+  <h1>Manage Drives</h1>
+  <a href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+  <br>
+  <br>
+  <h3>All Drives:</h3>
+  <br>
+
+  <form method="GET" action="{{ url_for('admin.manage_drives') }}">
+    <input type="text" name="q" placeholder="Search by drive or company name" value="{{ request.args.get('q', '') }}">
+    <input type="hidden" name="filter" value="{{ request.args.get('filter', 'all') }}">
+    <button type="submit">Search</button>
+  </form>
+  <br>
+
+  <a href="{{ url_for('admin.manage_drives', filter='all', q=request.args.get('q', '')) }}">All</a>
+  |
+  <a href="{{ url_for('admin.manage_drives', filter='ongoing', q=request.args.get('q', '')) }}">Ongoing</a>
+  |
+  <a href="{{ url_for('admin.manage_drives', filter='completed', q=request.args.get('q', '')) }}">Completed</a>
+
+  <p>Total Ongoing: {{ ongoing_drives|length }} | Total Completed: {{ past_drives|length }}</p>
+
+  {% for d in all_drives %}
+    <p>
+      {{ loop.index }}. {{ d.drive_name }} | {{ d.company.company_name }} | Deadline: {{ d.deadline.strftime('%Y-%m-%d') }}
+      | <a href="{{ url_for('admin.drive_detail', drive_id=d.drive_id) }}">View</a>
+      | {% if d.status %}
+          Completed
+        {% else %}
+          <a href="{{ url_for('admin.complete_drive', drive_id=d.drive_id) }}">Mark Complete</a>
+        {% endif %}
+    </p>
+  {% else %}
+    <p>No drives found.</p>
+  {% endfor %}
+
+</body>
+</html>

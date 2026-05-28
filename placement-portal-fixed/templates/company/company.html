@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Company Dashboard</title>
+</head>
+<body>
+
+  <h1>{{ company.company_name }} Dashboard</h1>
+  <a href="{{ url_for('auth.logout') }}">Log Out</a>
+  <br>
+  <a href="{{ url_for('company.profile') }}">View Profile</a>
+  <br>
+  <a href="{{ url_for('company.create_drive') }}">Create New Drive</a>
+
+<h2>Ongoing Drives</h2>
+{% set ongoing = drives | selectattr('status', 'equalto', False) | list %}
+{% if ongoing %}
+  {% for d in ongoing %}
+    <p>
+      {{ loop.index }}. {{ d.drive_name }} | {{ d.job_title }} | Deadline: {{ d.deadline.strftime('%Y-%m-%d') }}
+      | <a href="{{ url_for('company.drive_applications', drive_id=d.drive_id) }}">View Applications</a>
+      | <a href="{{ url_for('company.edit_drive', drive_id=d.drive_id) }}">Edit</a>
+      | <a href="{{ url_for('company.delete_drive', drive_id=d.drive_id) }}">Delete</a>
+      | <a href="{{ url_for('company.close_drive', drive_id=d.drive_id) }}">Mark Complete</a>
+    </p>
+  {% endfor %}
+{% else %}
+  <p>No ongoing drives.</p>
+{% endif %}
+
+<h2>Completed Drives</h2>
+{% set completed = drives | selectattr('status', 'equalto', True) | list %}
+{% if completed %}
+  {% for d in completed %}
+    <p>
+      {{ loop.index }}. {{ d.drive_name }} | {{ d.job_title }} | Deadline: {{ d.deadline.strftime('%Y-%m-%d') }}
+      | <a href="{{ url_for('company.drive_applications', drive_id=d.drive_id) }}">View Applications</a>
+    </p>
+  {% endfor %}
+{% else %}
+  <p>No completed drives.</p>
+{% endif %}
+
+</body>
+</html>

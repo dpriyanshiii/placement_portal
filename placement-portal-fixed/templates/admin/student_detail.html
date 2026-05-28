@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ student.f_name }} {{ student.l_name }}</title>
+</head>
+<body>
+
+  <a href="{{ url_for('admin.manage_students') }}">Back to Students</a>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <p style="color: {{ 'green' if category == 'success' else 'red' }}"><strong>{{ message }}</strong></p>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <h1>{{ student.f_name }} {{ student.l_name }}</h1>
+  <p>Email: {{ student.email }}</p>
+  <p>Department: {{ student.department }}</p>
+  <p>CGPA: {{ student.cgpa }}</p>
+  <p>Phone: {{ student.phone }}</p>
+  <p>Status: {% if student.is_blacklisted %} Blacklisted {% else %} Active {% endif %}</p>
+
+  {% if student.resume %}
+    <a href="{{ url_for('static', filename=student.resume.replace('static/', '')) }}" target="_blank">View Resume</a>
+  {% endif %}
+
+  <form method="POST" action="{{ url_for('admin.blacklist_student', student_id=student.student_id) }}"
+        onsubmit="return confirm('{% if student.is_blacklisted %}Remove blacklist for {{ student.f_name }}?{% else %}Blacklist {{ student.f_name }}?{% endif %}')">
+    <button type="submit">
+      {% if student.is_blacklisted %} Remove Blacklist {% else %} Blacklist {% endif %}
+    </button>
+  </form>
+
+  <h2>Applications</h2>
+  {% for a in applications %}
+    <p>
+      {{ loop.index }}. {{ a.drive.drive_name }} | {{ a.drive.job_title }} |
+      Status: {{ a.status }}
+      {% if a.remarks %} | Remarks: {{ a.remarks }} {% endif %}
+    </p>
+  {% else %}
+    <p>No applications yet.</p>
+  {% endfor %}
+
+</body>
+</html>

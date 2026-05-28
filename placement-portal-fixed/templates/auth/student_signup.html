@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Sign Up</title>
+</head>
+<body>
+    <h1>Student Sign Up</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <p><strong>{{ message }}</strong></p>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- enctype is required for file uploads -->
+    <form action="{{ url_for('auth.student_signup') }}" method="POST" enctype="multipart/form-data">
+
+        <input type="text"
+               name="f_name"
+               placeholder="First name"
+               minlength="1"
+               maxlength="20"
+               required>
+        <br><br>
+
+        <input type="text"
+               name="l_name"
+               placeholder="Last name"
+               maxlength="20"
+               required>
+        <br><br>
+
+        <input type="text"
+               name="username"
+               placeholder="Username (5–20 chars)"
+               minlength="5"
+               maxlength="20"
+               required>
+        <br><br>
+
+        <input type="email"
+               name="email"
+               placeholder="Email"
+               maxlength="100"
+               required>
+        <br><br>
+
+        <input type="password"
+               name="password"
+               placeholder="Password (5–20 chars)"
+               minlength="5"
+               maxlength="20"
+               required>
+        <br><br>
+
+        <input type="text"
+               name="department"
+               placeholder="Department"
+               maxlength="100"
+               required>
+        <br><br>
+
+        <input type="number"
+               name="cgpa"
+               placeholder="CGPA (0.0 – 10.0)"
+               min="0.0"
+               max="10.0"
+               step="0.01"
+               required>
+        <br><br>
+
+        <input type="tel"
+               name="phone"
+               placeholder="Phone number (10 digits)"
+               pattern="\d{10}"
+               maxlength="10"
+               required>
+        <br><br>
+
+        <label for="resume">Resume (PDF only):</label>
+        <input type="file"
+               id="resume"
+               name="resume"
+               accept=".pdf"
+               required>
+        <br><br>
+
+        <button type="submit">Sign Up</button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('auth.login') }}">Already have an account? Login</a>
+
+     <br><br>
+    <a href="{{ url_for('home') }}">Go back to Home</a>
+</body>
+</html>
