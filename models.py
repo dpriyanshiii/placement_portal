@@ -7,8 +7,7 @@ class User(db.Model):
     username = db.Column(db.String(20), unique = True, nullable  = False)
     email = db.Column(db.String(100), unique = True, nullable = False)
     password_hash = db.Column(db.String(200), nullable = False)
-    role = db.Column(db.String(7), nullable = False) #company/student
-    #time_created = db.Column(db.Datetime).......... should i?
+    role = db.Column(db.String(7), nullable = False) #company/student/admin
 
 
 
@@ -45,7 +44,7 @@ class Company(db.Model):
     website = db.Column(db.Text)
     description = db.Column(db.Text)
     logo = db.Column(db.String(200))
-    approval_status = db.Column(db.Boolean, default=False)  # shortlist, waiting(applied), reject
+    approval_status = db.Column(db.Boolean, default=False)  # shortlist, waiting/reject
     is_blacklisted = db.Column(db.Boolean, default=False)
 
 

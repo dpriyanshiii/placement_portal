@@ -9,6 +9,17 @@
   <h1>Manage Companies</h1>
   <a href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
 
+  <h3>Pending Approvals:</h3>
+  {% for c in pending %}
+  <p>
+    {{ c.company_name }} | {{ c.hr_fname }} {{ c.hr_lname }} | {{ c.hr_email }}
+    <a href="{{ url_for('admin.approve_company', company_id=c.company_id) }}">Approve</a>
+    <a href="{{ url_for('admin.reject_company', company_id=c.company_id) }}">Reject</a>
+  </p>
+  {% else %}
+  <p>No pending approvals.</p>
+  {% endfor %}
+
   <h3>All Companies:</h3>
   <form method="GET" action="{{ url_for('admin.manage_companies') }}">
     <input type="text" name="q" placeholder="Search by company name" value="{{ request.args.get('q', '') }}">

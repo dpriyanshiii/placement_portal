@@ -85,7 +85,7 @@ def reject_company(company_id):
     return redirect(url_for('admin.manage_companies'))
 
 
-@admin.route('/blacklist_company/<int:company_id>', methods=['POST'])
+@admin.route('/blacklist_company/<int:company_id>')
 def blacklist_company(company_id):
     company = Company.query.get_or_404(company_id)
     company.is_blacklisted = not company.is_blacklisted
@@ -190,7 +190,7 @@ def manage_students():
     return render_template('admin/manage_student.html', students=students)
 
 
-@admin.route('/blacklist_student/<int:student_id>', methods=['POST'])
+@admin.route('/blacklist_student/<int:student_id>')
 def blacklist_student(student_id):
     student = Student.query.get_or_404(student_id)
     student.is_blacklisted = not student.is_blacklisted
