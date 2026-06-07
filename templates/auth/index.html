@@ -1,29 +1,251 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Placement Cell</title>
-</head>
-<body>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+{% extends "base.html" %}
 
+{% block title %}Welcome{% endblock %}
 
-    <h1>Welcome to placement portal!</h1>
-    <a href="{{ url_for('auth.student_signup') }}">Sign Up as student</a>
-    <br><br>
-    <a href="{{ url_for('auth.company_signup') }}">Sign Up as company</a>
-    <br><br>
-    <a href="{{ url_for('auth.login') }}">Login</a>
+{% block extra_head %}
+<style>
+  .index-wrap {
+    height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
 
-</body>
-</html>
+  /* full screen background */
+  .index-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  .index-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.45;
+    mix-blend-mode: luminosity;
+    animation: kenBurns 18s ease-in-out infinite alternate;
+  }
+  @keyframes kenBurns {
+    from { transform: scale(1); }
+    to   { transform: scale(1.06); }
+  }
+
+  /* gradient overlay — lighter in center, dark at bottom */
+  .index-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(13,13,13,0.3) 0%,
+      rgba(13,13,13,0.1) 40%,
+      rgba(13,13,13,0.6) 75%,
+      rgba(13,13,13,0.92) 100%
+    );
+  }
+
+  /* ghosted watermark */
+  .index-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-display);
+    font-size: 28vw;
+    font-weight: 900;
+    color: rgba(255,255,255,0.02);
+    letter-spacing: -0.05em;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 1;
+    animation: ghostDrift 14s ease-in-out infinite alternate;
+  }
+  @keyframes ghostDrift {
+    from { transform: translate(-50%, -51%); }
+    to   { transform: translate(-50%, -49%); }
+  }
+
+  /* dots */
+  .index-dots {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .index-dot {
+    position: absolute;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--amber);
+    opacity: 0.2;
+    animation: dotPulse 3s ease-in-out infinite;
+  }
+  .index-dot:nth-child(1) { top: 12%; left: 5%;  animation-delay: 0s; }
+  .index-dot:nth-child(2) { top: 55%; left: 3%;  animation-delay: 0.8s; }
+  .index-dot:nth-child(3) { top: 80%; left: 7%;  animation-delay: 1.6s; }
+  .index-dot:nth-child(4) { top: 12%; right: 5%; animation-delay: 0.4s; }
+  .index-dot:nth-child(5) { top: 55%; right: 3%; animation-delay: 1.2s; }
+  .index-dot:nth-child(6) { top: 80%; right: 7%; animation-delay: 2s; }
+
+  /* center content */
+  .index-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 2rem;
+    position: relative;
+    z-index: 2;
+  }
+  .index-center .hero__overline {
+    justify-content: center;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.2s;
+  }
+  .index-center h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 7vw, 6rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    margin-bottom: 1.25rem;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.4s;
+  }
+  .index-center p {
+    color: var(--paper);
+    font-size: 1rem;
+    max-width: 440px;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.6s;
+  }
+  .index-center .btn {
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.8s;
+  }
+
+  /* amber underline that draws itself */
+  .index-underline {
+    display: block;
+    width: 0;
+    height: 2px;
+    background: var(--amber);
+    margin: 0.5rem auto 0;
+    animation: drawLine 0.6s ease forwards 0.9s;
+  }
+  @keyframes drawLine {
+    from { width: 0; }
+    to   { width: 80px; }
+  }
+
+  /* bottom role cards */
+  .index-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--line);
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 1s;
+  }
+  .index-card {
+    padding: 1.75rem 2.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.2s, border-left 0.2s;
+    border-right: 1px solid var(--line);
+    border-left: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(13,13,13,0.7);
+    backdrop-filter: blur(8px);
+  }
+  .index-card:last-child { border-right: none; }
+  .index-card:hover {
+    background: rgba(21,18,16,0.9);
+    border-left-color: var(--amber);
+  }
+  .index-card__left {}
+  .index-card__label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+  }
+  .index-card__title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+  .index-card__arrow {
+    font-size: 1.4rem;
+    color: var(--amber);
+    transition: transform 0.2s;
+  }
+  .index-card:hover .index-card__arrow {
+    transform: translateX(5px);
+  }
+  @media (max-width: 600px) {
+    .index-cards { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="index-wrap">
+
+  <!-- background image -->
+  <div class="index-bg">
+    <img src="{{ url_for('static', filename='indexbg.jpg') }}" alt="">
+  </div>
+
+  <!-- watermark -->
+  <div class="index-watermark">IITM</div>
+
+  <!-- dots -->
+  <div class="index-dots">
+    <div class="index-dot"></div>
+    <div class="index-dot"></div>
+    <div class="index-dot"></div>
+    <div class="index-dot"></div>
+    <div class="index-dot"></div>
+    <div class="index-dot"></div>
+  </div>
+
+  <!-- center content -->
+  <div class="index-center">
+    <p class="hero__overline">IIT Madras</p>
+    <h1>Campus <em style="color: var(--amber); font-style: italic;">Placement</em> Portal</h1>
+    <span class="index-underline"></span>
+    <p>Connect students with opportunities. Manage drives, applications, and outcomes — all in one place.</p>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Login →</a>
+  </div>
+
+  <!-- bottom cards -->
+  <div class="index-cards">
+    <a href="{{ url_for('auth.student_signup') }}" class="index-card">
+      <div class="index-card__left">
+        <p class="index-card__label">Join as</p>
+        <p class="index-card__title">Student</p>
+      </div>
+      <span class="index-card__arrow">→</span>
+    </a>
+    <a href="{{ url_for('auth.company_signup') }}" class="index-card">
+      <div class="index-card__left">
+        <p class="index-card__label">Join as</p>
+        <p class="index-card__title">Company</p>
+      </div>
+      <span class="index-card__arrow">→</span>
+    </a>
+  </div>
+
+</div>
+{% endblock %}

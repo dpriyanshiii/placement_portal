@@ -1,43 +1,252 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
-<body>
-    <h1>Login</h1>
+{% extends "base.html" %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p><strong>{{ message }}</strong></p>
-        {% endfor %}
-    {% endwith %}
+{% block title %}Login{% endblock %}
 
-    <form action="{{ url_for('auth.login') }}" method="POST">
-        <input type="email"
-               name="email"
-               placeholder="Enter email"
-               required>
-        <br><br>
+{% block extra_head %}
+<style>
+  .login-wrap {
+    min-height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
 
-        <input type="password"
-               name="password"
-               placeholder="Enter password"
-               minlength="5"
-               maxlength="20"
-               required>
-        <br><br>
+  /* ghosted background text */
+  .login-wrap::before {
+    z-index: 0;
+    content: 'IITM';
+    position: absolute;
+    left: -2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-display);
+    font-size: 22vw;
+    font-weight: 900;
+    color: rgba(255,255,255,0.018);
+    letter-spacing: -0.05em;
+    pointer-events: none;
+    line-height: 1;
+    animation: ghostDrift 12s ease-in-out infinite alternate;
+  }
+  .login-wrap::after {
+    z-index: 0;
+    content: '2026';
+    position: absolute;
+    right: -1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-display);
+    font-size: 18vw;
+    font-weight: 900;
+    color: rgba(232,160,32,0.04);
+    letter-spacing: -0.05em;
+    pointer-events: none;
+    line-height: 1;
+    animation: ghostDrift 12s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes ghostDrift {
+    from { transform: translateY(-52%); }
+    to   { transform: translateY(-48%); }
+  }
 
-        <button type="submit">Login</button>
-    </form>
+  /* decorative dots */
+  .login-dots {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .login-dot {
+    position: absolute;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--amber);
+    opacity: 0.18;
+    animation: dotPulse 3s ease-in-out infinite;
+  }
+  .login-dot:nth-child(1) { top: 15%; left: 8%;  animation-delay: 0s; }
+  .login-dot:nth-child(2) { top: 70%; left: 6%;  animation-delay: 0.8s; }
+  .login-dot:nth-child(3) { top: 40%; left: 12%; animation-delay: 1.6s; }
+  .login-dot:nth-child(4) { top: 20%; right: 8%; animation-delay: 0.4s; }
+  .login-dot:nth-child(5) { top: 65%; right: 6%; animation-delay: 1.2s; }
+  .login-dot:nth-child(6) { top: 85%; right: 12%; animation-delay: 2s; }
 
-    <br>
-    <a href="{{ url_for('auth.student_signup') }}">Sign up as a student</a>
-    <br>
-    <a href="{{ url_for('auth.company_signup') }}">Sign up as a company</a>
+  /* decorative side lines */
+  .login-line-left,
+  .login-line-right {
+    position: absolute;
+    top: 20%;
+    width: 1px;
+    height: 60%;
+    background: linear-gradient(to bottom, transparent, var(--line), transparent);
+    pointer-events: none;
+  }
+  .login-line-left  { left: 18%; }
+  .login-line-right { right: 18%; }
 
-    <br><br>
-    <a href="{{ url_for('home') }}">Go back to Home</a>
-</body>
-</html>
+  /* back link */
+  .login-back {
+    position: absolute;
+    top: 1.5rem;
+    left: 2rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.15s;
+    z-index: 10;
+  }
+  .login-back:hover { color: var(--amber); }
+
+  /* branding animation */
+  .login-brand {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    position: relative;
+    z-index: 1;
+  }
+  .login-brand .hero__overline {
+    justify-content: center;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.1s;
+  }
+  .login-brand h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.25s;
+  }
+  .login-brand p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+    line-height: 1.7;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.4s;
+  }
+
+  /* card animation */
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    animation: fadeUp 0.55s ease forwards 0.55s;
+  }
+
+  /* signup links animation */
+  .login-signup {
+    margin-top: 1.5rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.7s;
+  }
+
+  /* button shimmer */
+  .btn-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transform: skewX(-20deg);
+    transition: none;
+  }
+  .btn-shimmer:hover::after {
+    animation: shimmer 0.55s ease forwards;
+  }
+  @keyframes shimmer {
+    from { left: -100%; }
+    to   { left: 160%; }
+  }
+
+  /* input glow on focus */
+  .field input:focus {
+    box-shadow: 0 0 0 2px rgba(232,160,32,0.15), 0 0 20px rgba(232,160,32,0.08) !important;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="login-wrap">
+
+  <!-- decorative dots -->
+  <div class="login-dots">
+    <div class="login-dot"></div>
+    <div class="login-dot"></div>
+    <div class="login-dot"></div>
+    <div class="login-dot"></div>
+    <div class="login-dot"></div>
+    <div class="login-dot"></div>
+  </div>
+
+  <!-- decorative lines -->
+  <div class="login-line-left"></div>
+  <div class="login-line-right"></div>
+
+  <!-- back link -->
+  <a href="{{ url_for('home') }}" class="login-back">← Home</a>
+
+  <!-- branding -->
+  <div class="login-brand">
+    <p class="hero__overline">IIT Madras</p>
+    <h1>Welcome <em style="color: var(--amber); font-style: italic;">back.</em></h1>
+    <p>Your next opportunity is waiting.</p>
+  </div>
+
+  <!-- form card -->
+  <div class="login-card card">
+    <div class="card-body">
+      <form action="{{ url_for('auth.login') }}" method="POST">
+        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+
+          <div class="field">
+            <label>Email address</label>
+            <input type="email" name="email" placeholder="you@example.com" required>
+          </div>
+
+          <div class="field">
+            <label>Password</label>
+            <input type="password" name="password" placeholder="••••••••" minlength="5" maxlength="20" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-shimmer" style="width: 100%; justify-content: center; padding: 0.75rem; margin-top: 0.25rem;">
+            Login →
+          </button>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- signup links -->
+  <div class="login-signup">
+    <p style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.75rem;">New here?</p>
+    <div style="display: flex; gap: 0.5rem; justify-content: center;">
+      <a href="{{ url_for('auth.student_signup') }}" class="btn btn-outline">Student Signup</a>
+      <a href="{{ url_for('auth.company_signup') }}" class="btn btn-outline">Company Signup</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
