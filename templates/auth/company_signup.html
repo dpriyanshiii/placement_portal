@@ -1,98 +1,406 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Company Sign Up</title>
-</head>
-<body>
-    <h1>Company Sign Up</h1>
+{% extends "base.html" %}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p><strong>{{ message }}</strong></p>
-        {% endfor %}
-    {% endwith %}
+{% block title %}Company Sign Up{% endblock %}
 
-    <form action="{{ url_for('auth.company_signup') }}" method="POST" enctype="multipart/form-data">
+{% block extra_head %}
+<style>
+  .signup-wrap {
+  min-height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4rem 2rem 3rem;
+  position: relative;
+  overflow: visible;
+}
 
-        <input type="text"
-               name="company_name"
-               placeholder="Company name"
-               maxlength="100"
-               required>
-        <br><br>
+  .signup-dots {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .signup-dot {
+    position: absolute;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--amber);
+    opacity: 0.18;
+    animation: dotPulse 3s ease-in-out infinite;
+  }
+  .signup-dot:nth-child(1) { top: 15%; left: 8%;  animation-delay: 0s; }
+  .signup-dot:nth-child(2) { top: 70%; left: 6%;  animation-delay: 0.8s; }
+  .signup-dot:nth-child(3) { top: 40%; left: 12%; animation-delay: 1.6s; }
+  .signup-dot:nth-child(4) { top: 20%; right: 8%; animation-delay: 0.4s; }
+  .signup-dot:nth-child(5) { top: 65%; right: 6%; animation-delay: 1.2s; }
+  .signup-dot:nth-child(6) { top: 85%; right: 12%; animation-delay: 2s; }
 
-        <input type="text"
-               name="hr_fname"
-               placeholder="HR first name"
-               maxlength="20"
-               required>
-        <br><br>
+  .signup-back {
+    position: absolute;
+    top: 1.5rem;
+    left: 2rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.15s;
+    z-index: 10;
+  }
+  .signup-back:hover { color: var(--amber); }
 
-        <input type="text"
-               name="hr_lname"
-               placeholder="HR last name"
-               maxlength="20"
-               required>
-        <br><br>
+  .signup-brand {
+    text-align: center;
+    margin-bottom: 2rem;
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.15s;
+  }
+  .signup-brand h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .signup-brand p {
+    color: var(--paper);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+  }
 
-        <input type="email"
-               name="hr_email"
-               placeholder="HR email"
-               maxlength="100"
-               required>
-        <br><br>
+  .progress-wrap {
+    width: 100%;
+    max-width: 480px;
+    margin-bottom: 1.75rem;
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.3s;
+  }
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  .progress-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: color 0.3s;
+  }
+  .progress-label.active { color: var(--amber); }
+  .progress-label.done   { color: var(--sage); }
+  .progress-track {
+    width: 100%;
+    height: 3px;
+    background: var(--line);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber-d), var(--amber));
+    border-radius: 99px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 16%;
+  }
 
-        <input type="url"
-               name="website"
-               placeholder="Website (https://...)"
-               maxlength="200">
-        <br><br>
+  .signup-card {
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    animation: fadeUp 0.55s ease forwards 0.45s;
+    overflow: hidden;
+  }
 
-        <textarea name="description"
-                  placeholder="Company description"
-                  rows="4"
-                  cols="40"></textarea>
-        <br><br>
+  .steps-track {
+    display: flex;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .step {
+    min-width: 100%;
+    padding: 1.75rem;
+  }
+  .step-title {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 1.25rem;
+  }
+  .step-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+  .step-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
 
-        <label for="logo">Company logo (image):</label>
-        <input type="file"
-               id="logo"
-               name="logo"
-               accept="image/*">
-        <br><br>
+  /* section divider inside form */
+  .step-section-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 0.25rem;
+  }
 
-        <input type="text"
-               name="username"
-               placeholder="Username (5–20 chars)"
-               minlength="5"
-               maxlength="20"
-               required>
-        <br><br>
+  .step-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.75rem 1.5rem;
+    border-top: 1px solid var(--line);
+  }
 
-        <input type="email"
-               name="email"
-               placeholder="Account email"
-               maxlength="100"
-               required>
-        <br><br>
+  .signup-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards 0.6s;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .signup-footer a { color: var(--amber); text-decoration: none; }
+  .signup-footer a:hover { text-decoration: underline; }
 
-        <input type="password"
-               name="password"
-               placeholder="Password (5–20 chars)"
-               minlength="5"
-               maxlength="20"
-               required>
-        <br><br>
+  .file-hint {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    letter-spacing: 0.04em;
+  }
 
-        <button type="submit">Register Company</button>
-    </form>
+  .upload-zone {
+    border: 1px dashed var(--line);
+    border-radius: var(--r);
+    padding: 2rem;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .upload-zone:hover { border-color: var(--amber); }
+  .upload-zone__icon {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: var(--amber);
+    opacity: 0.5;
+    margin-bottom: 0.5rem;
+  }
+  .upload-zone__label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
 
-    <br>
-    <a href="{{ url_for('auth.login') }}">Already have an account? Login</a>
+  .approval-note {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--amber);
+    letter-spacing: 0.04em;
+    border: 1px solid rgba(232,160,32,0.2);
+    border-radius: var(--r);
+    padding: 0.75rem 1rem;
+    margin-top: 1.25rem;
+    line-height: 1.5;
+  }
+</style>
+{% endblock %}
 
-    <br><br>
-    <a href="{{ url_for('home') }}">Go back to Home</a>
-</body>
-</html>
+{% block body %}
+<div class="signup-wrap">
+
+  <div style="position: fixed; inset: 0; z-index: 0; pointer-events: none;">
+    <img src="{{ url_for('static', filename='indexbg.jpg') }}" alt="" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.35; mix-blend-mode: luminosity; animation: kenBurns 18s ease-in-out infinite alternate;">
+    <div style="position: absolute; inset: 0; background: rgba(232,160,32,0.03);"></div>
+  </div>
+
+  <div class="signup-dots">
+    <div class="signup-dot"></div>
+    <div class="signup-dot"></div>
+    <div class="signup-dot"></div>
+    <div class="signup-dot"></div>
+    <div class="signup-dot"></div>
+    <div class="signup-dot"></div>
+  </div>
+
+  <a href="{{ url_for('home') }}" class="signup-back">← Home</a>
+
+  <div class="signup-brand">
+    <p class="hero__overline" style="justify-content: center;">IIT Madras</p>
+    <h1>Company <em style="color: var(--amber); font-style: italic;">Sign Up</em></h1>
+    <p>Register your company and start posting drives.</p>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-labels">
+      <span class="progress-label active" id="lbl-1">Credentials</span>
+      <span class="progress-label" id="lbl-2">Company Info</span>
+      <span class="progress-label" id="lbl-3">Logo</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="prog-fill"></div>
+    </div>
+  </div>
+
+  <form action="{{ url_for('auth.company_signup') }}" method="POST" enctype="multipart/form-data" id="signup-form">
+    <div class="signup-card card">
+
+      <div style="overflow: hidden;">
+        <div class="steps-track" id="steps-track">
+
+          <!-- STEP 1: Credentials -->
+          <div class="step">
+            <p class="step-title">Step 1 — Account Credentials</p>
+            <div class="step-fields">
+              <div class="field">
+                <label>Username</label>
+                <input type="text" name="username" minlength="5" maxlength="20" placeholder="acme_corp" required>
+              </div>
+              <div class="field">
+                <label>Account Email <span style="color: var(--muted); font-size: 0.75em;">(used to log in)</span></label>
+                <input type="email" name="email" maxlength="100" placeholder="login@acme.com" required>
+              </div>
+              <div class="field">
+                <label>Password</label>
+                <input type="password" name="password" minlength="5" maxlength="20" placeholder="••••••••" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: Company Info -->
+          <div class="step">
+            <p class="step-title">Step 2 — Company Info</p>
+            <div class="step-fields">
+              <div class="field">
+                <label>Company Name</label>
+                <input type="text" name="company_name" maxlength="100" placeholder="Acme Corp" required>
+              </div>
+              <p class="step-section-label">HR Contact</p>
+              <div class="step-row">
+                <div class="field">
+                  <label>HR First Name</label>
+                  <input type="text" name="hr_fname" maxlength="20" placeholder="Jane" required>
+                </div>
+                <div class="field">
+                  <label>HR Last Name</label>
+                  <input type="text" name="hr_lname" maxlength="20" placeholder="Doe" required>
+                </div>
+              </div>
+              <div class="field">
+                <label>HR Email <span style="color: var(--muted); font-size: 0.75em;">(contact, not login)</span></label>
+                <input type="email" name="hr_email" maxlength="100" placeholder="hr@acme.com" required>
+              </div>
+              <div class="field">
+                <label>Website <span style="color: var(--muted); font-size: 0.75em;">(optional)</span></label>
+                <input type="url" name="website" maxlength="200" placeholder="https://acme.com">
+              </div>
+              <div class="field">
+                <label>Description <span style="color: var(--muted); font-size: 0.75em;">(optional)</span></label>
+                <textarea name="description" rows="3" placeholder="Tell students about your company..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 3: Logo -->
+          <div class="step">
+            <p class="step-title">Step 3 — Company Logo</p>
+            <div class="upload-zone">
+              <div class="upload-zone__icon">↑</div>
+              <p class="upload-zone__label">Upload your logo</p>
+              <div class="field">
+                <input type="file" name="logo" accept="image/*">
+              </div>
+              <p class="file-hint">PNG or JPG · Optional</p>
+            </div>
+            <div class="approval-note">
+              ⚠ Your account will need admin approval before you can log in. You'll be notified once approved.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn btn-outline btn-sm" id="btn-prev" style="visibility: hidden;" onclick="changeStep(-1)">← Back</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-next" onclick="changeStep(1)">Next →</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="btn-submit" style="display: none;">Register →</button>
+      </div>
+
+    </div>
+  </form>
+
+  <div class="signup-footer">
+    Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
+    &nbsp;·&nbsp;
+    <a href="{{ url_for('auth.student_signup') }}">Register as Student</a>
+  </div>
+
+</div>
+
+<script>
+  let current = 0;
+  const total = 3;
+  const track = document.getElementById('steps-track');
+  const fill  = document.getElementById('prog-fill');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  const btnSubmit = document.getElementById('btn-submit');
+  const labels = [
+    document.getElementById('lbl-1'),
+    document.getElementById('lbl-2'),
+    document.getElementById('lbl-3'),
+  ];
+
+  const progWidths = ['16%', '50%', '84%'];
+
+  function updateUI() {
+    track.style.transform = `translateX(-${current * 100}%)`;
+    fill.style.width = progWidths[current];
+
+    labels.forEach((l, i) => {
+      l.className = 'progress-label';
+      if (i < current)  l.classList.add('done');
+      if (i === current) l.classList.add('active');
+    });
+
+    btnPrev.style.visibility = current === 0 ? 'hidden' : 'visible';
+    btnNext.style.display     = current === total - 1 ? 'none'  : 'inline-flex';
+    btnSubmit.style.display   = current === total - 1 ? 'inline-flex' : 'none';
+  }
+
+  function changeStep(dir) {
+    if (dir === 1 && current < total - 1) current++;
+    if (dir === -1 && current > 0) current--;
+    updateUI();
+  }
+
+  updateUI();
+</script>
+{% endblock %}

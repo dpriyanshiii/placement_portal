@@ -189,6 +189,10 @@
 
 {% block body %}
 <div class="login-wrap">
+  <div style="position: fixed; inset: 0; z-index: 0; pointer-events: none;">
+    <img src="{{ url_for('static', filename='indexbg.jpg') }}" alt="" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.35; mix-blend-mode: luminosity; animation: kenBurns 18s ease-in-out infinite alternate;">
+    <div style="position: absolute; inset: 0; background: rgba(232,160,32,0.03);"></div>
+  </div>
 
   <!-- decorative dots -->
   <div class="login-dots">
