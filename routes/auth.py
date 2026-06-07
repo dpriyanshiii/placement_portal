@@ -41,11 +41,18 @@ def login():
         if user.role == 'admin':
             return redirect(url_for('admin.dashboard'))
         elif user.role == 'student':
+            student = Student.query.filter_by(user_id=user.user_id).first()
+            if student and student.is_blacklisted:
+                flash('Your account has been blacklisted. Please contact the admin.', 'error')
+                return redirect(url_for('home'))
             return redirect(url_for('student.dashboard'))
         elif user.role == 'company':
             company = Company.query.filter_by(user_id=user.user_id).first()
             if not company or company.approval_status != 1:
                 flash('Company not approved yet.', 'error')
+                return redirect(url_for('home'))
+            if company.is_blacklisted:
+                flash('Your account has been blacklisted. Please contact the admin.', 'error')
                 return redirect(url_for('home'))
             return redirect(url_for('company.dashboard'))
         
