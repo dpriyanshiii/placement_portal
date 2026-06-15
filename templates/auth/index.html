@@ -27,17 +27,17 @@
     animation: kenBurns 18s ease-in-out infinite alternate;
   }
 
-  /* gradient overlay — lighter in center, dark at bottom */
+  /* gradient overlay — darker so text is always readable */
   .index-bg::after {
     content: '';
     position: absolute;
     inset: 0;
     background: linear-gradient(
       to bottom,
-      rgba(13,13,13,0.3) 0%,
-      rgba(13,13,13,0.1) 40%,
-      rgba(13,13,13,0.6) 75%,
-      rgba(13,13,13,0.92) 100%
+      rgba(13,13,13,0.55) 0%,
+      rgba(13,13,13,0.35) 40%,
+      rgba(13,13,13,0.72) 75%,
+      rgba(13,13,13,0.95) 100%
     );
   }
 
@@ -107,6 +107,7 @@
     font-weight: 900;
     letter-spacing: -0.04em;
     line-height: 1.05;
+    color: var(--paper);
     margin-bottom: 1.25rem;
     opacity: 0;
     animation: fadeUp 0.5s ease forwards 0.4s;

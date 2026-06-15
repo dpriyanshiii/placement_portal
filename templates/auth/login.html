@@ -4,6 +4,28 @@
 
 {% block extra_head %}
 <style>
+  /* full-viewport fixed background — lives OUTSIDE login-wrap so overflow:hidden doesn't clip it */
+  .login-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .login-bg img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.38;
+    mix-blend-mode: luminosity;
+    animation: kenBurns 18s ease-in-out infinite alternate;
+  }
+  /* dark overlay so text is always readable */
+  .login-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(13,13,13,0.72);
+  }
+
   .login-wrap {
     min-height: calc(100vh - 56px);
     display: flex;
@@ -12,12 +34,12 @@
     justify-content: center;
     padding: 2rem;
     position: relative;
-    overflow: hidden;
+    /* no overflow:hidden — let the fixed bg show through */
   }
 
   /* ghosted background text */
   .login-wrap::before {
-    z-index: 0;
+    z-index: 1;
     content: 'IITM';
     position: absolute;
     left: -2rem;
@@ -26,14 +48,14 @@
     font-family: var(--font-display);
     font-size: 22vw;
     font-weight: 900;
-    color: rgba(255,255,255,0.018);
+    color: rgba(255,255,255,0.025);
     letter-spacing: -0.05em;
     pointer-events: none;
     line-height: 1;
     animation: ghostDrift 12s ease-in-out infinite alternate;
   }
   .login-wrap::after {
-    z-index: 0;
+    z-index: 1;
     content: '2026';
     position: absolute;
     right: -1rem;
@@ -42,7 +64,7 @@
     font-family: var(--font-display);
     font-size: 18vw;
     font-weight: 900;
-    color: rgba(232,160,32,0.04);
+    color: rgba(232,160,32,0.05);
     letter-spacing: -0.05em;
     pointer-events: none;
     line-height: 1;
@@ -59,6 +81,7 @@
     inset: 0;
     pointer-events: none;
     overflow: hidden;
+    z-index: 2;
   }
   .login-dot {
     position: absolute;
@@ -84,6 +107,7 @@
     height: 60%;
     background: linear-gradient(to bottom, transparent, var(--line), transparent);
     pointer-events: none;
+    z-index: 2;
   }
   .login-line-left  { left: 18%; }
   .login-line-right { right: 18%; }
@@ -112,7 +136,7 @@
     text-align: center;
     margin-bottom: 2.5rem;
     position: relative;
-    z-index: 1;
+    z-index: 3;
   }
   .login-brand .hero__overline {
     justify-content: center;
@@ -125,11 +149,12 @@
     font-weight: 900;
     letter-spacing: -0.03em;
     line-height: 1.1;
+    color: var(--paper);
     opacity: 0;
     animation: fadeUp 0.5s ease forwards 0.25s;
   }
   .login-brand p {
-    color: var(--muted);
+    color: rgba(245,240,232,0.65);
     font-size: 0.9rem;
     margin-top: 0.75rem;
     line-height: 1.7;
@@ -137,14 +162,16 @@
     animation: fadeUp 0.5s ease forwards 0.4s;
   }
 
-  /* card animation */
+  /* card — solid dark bg so it always pops */
   .login-card {
     width: 100%;
     max-width: 420px;
     position: relative;
-    z-index: 1;
+    z-index: 3;
     opacity: 0;
     animation: fadeUp 0.55s ease forwards 0.55s;
+    background: #151210 !important;
+    border-color: #2a2520 !important;
   }
 
   /* signup links animation */
@@ -152,7 +179,7 @@
     margin-top: 1.5rem;
     text-align: center;
     position: relative;
-    z-index: 1;
+    z-index: 3;
     opacity: 0;
     animation: fadeUp 0.5s ease forwards 0.7s;
   }
@@ -188,11 +215,13 @@
 {% endblock %}
 
 {% block body %}
+
+<!-- background lives outside login-wrap so overflow:hidden doesn't clip it -->
+<div class="login-bg">
+  <img src="{{ url_for('static', filename='indexbg.jpg') }}" alt="">
+</div>
+
 <div class="login-wrap">
-  <div style="position: fixed; inset: 0; z-index: 0; pointer-events: none;">
-    <img src="{{ url_for('static', filename='indexbg.jpg') }}" alt="" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.35; mix-blend-mode: luminosity; animation: kenBurns 18s ease-in-out infinite alternate;">
-    <div style="position: absolute; inset: 0; background: rgba(232,160,32,0.03);"></div>
-  </div>
 
   <!-- decorative dots -->
   <div class="login-dots">

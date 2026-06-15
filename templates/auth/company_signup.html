@@ -236,9 +236,9 @@
 {% block body %}
 <div class="signup-wrap">
 
-  <div style="position: fixed; inset: 0; z-index: 0; pointer-events: none;">
+  <div style="position: fixed; inset: 0; z-index: -1; pointer-events: none;">
     <img src="{{ url_for('static', filename='indexbg.jpg') }}" alt="" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.35; mix-blend-mode: luminosity; animation: kenBurns 18s ease-in-out infinite alternate;">
-    <div style="position: absolute; inset: 0; background: rgba(232,160,32,0.03);"></div>
+    <div style="position: absolute; inset: 0; background: rgba(13,13,13,0.72);"></div>
   </div>
 
   <div class="signup-dots">
@@ -281,11 +281,11 @@
             <div class="step-fields">
               <div class="field">
                 <label>Username</label>
-                <input type="text" name="username" minlength="5" maxlength="20" placeholder="acme_corp" required>
+                <input type="text" name="username" minlength="5" maxlength="20" placeholder="abc company" required>
               </div>
               <div class="field">
                 <label>Account Email <span style="color: var(--muted); font-size: 0.75em;">(used to log in)</span></label>
-                <input type="email" name="email" maxlength="100" placeholder="login@acme.com" required>
+                <input type="email" name="email" maxlength="100" placeholder="login@abc.com" required>
               </div>
               <div class="field">
                 <label>Password</label>
@@ -300,26 +300,26 @@
             <div class="step-fields">
               <div class="field">
                 <label>Company Name</label>
-                <input type="text" name="company_name" maxlength="100" placeholder="Acme Corp" required>
+                <input type="text" name="company_name" maxlength="100" placeholder="abc company" required>
               </div>
               <p class="step-section-label">HR Contact</p>
               <div class="step-row">
                 <div class="field">
                   <label>HR First Name</label>
-                  <input type="text" name="hr_fname" maxlength="20" placeholder="Jane" required>
+                  <input type="text" name="hr_fname" maxlength="20" placeholder="Priya" required>
                 </div>
                 <div class="field">
                   <label>HR Last Name</label>
-                  <input type="text" name="hr_lname" maxlength="20" placeholder="Doe" required>
+                  <input type="text" name="hr_lname" maxlength="20" placeholder="Dalwadi" required>
                 </div>
               </div>
               <div class="field">
                 <label>HR Email <span style="color: var(--muted); font-size: 0.75em;">(contact, not login)</span></label>
-                <input type="email" name="hr_email" maxlength="100" placeholder="hr@acme.com" required>
+                <input type="email" name="hr_email" maxlength="100" placeholder="hr@abc.com" required>
               </div>
               <div class="field">
                 <label>Website <span style="color: var(--muted); font-size: 0.75em;">(optional)</span></label>
-                <input type="url" name="website" maxlength="200" placeholder="https://acme.com">
+                <input type="url" name="website" maxlength="200" placeholder="https://abc.com">
               </div>
               <div class="field">
                 <label>Description <span style="color: var(--muted); font-size: 0.75em;">(optional)</span></label>

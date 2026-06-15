@@ -218,9 +218,9 @@
 
 {% block body %}
 <div class="signup-wrap">
-  <div style="position: fixed; inset: 0; z-index: 0; pointer-events: none;">
+  <div style="position: fixed; inset: 0; z-index: -1; pointer-events: none;">
     <img src="{{ url_for('static', filename='indexbg.jpg') }}" alt="" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.35; mix-blend-mode: luminosity; animation: kenBurns 18s ease-in-out infinite alternate;">
-    <div style="position: absolute; inset: 0; background: rgba(232,160,32,0.03);"></div>
+    <div style="position: absolute; inset: 0; background: rgba(13,13,13,0.72);"></div>
   </div>
 
   <div class="signup-dots">
@@ -266,20 +266,20 @@
               <div class="step-row">
                 <div class="field">
                   <label>First name</label>
-                  <input type="text" name="f_name" minlength="1" maxlength="20" placeholder="Ada" required>
+                  <input type="text" name="f_name" minlength="1" maxlength="20" placeholder="Priya" required>
                 </div>
                 <div class="field">
                   <label>Last name</label>
-                  <input type="text" name="l_name" maxlength="20" placeholder="Lovelace" required>
+                  <input type="text" name="l_name" maxlength="20" placeholder="Dalwadi" required>
                 </div>
               </div>
               <div class="field">
                 <label>Username</label>
-                <input type="text" name="username" minlength="5" maxlength="20" placeholder="ada_lovelace" required>
+                <input type="text" name="username" minlength="5" maxlength="20" placeholder="priya_dalwadi" required>
               </div>
               <div class="field">
                 <label>Email</label>
-                <input type="email" name="email" maxlength="100" placeholder="ada@example.com" required>
+                <input type="email" name="email" maxlength="100" placeholder="priya@example.com" required>
               </div>
               <div class="field">
                 <label>Password</label>

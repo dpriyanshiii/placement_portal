@@ -748,7 +748,8 @@
     .text-muted { color: var(--muted); font-size: 0.875rem; }
     .text-mono { font-family: var(--font-mono); font-size: 0.8rem; }
     .text-amber { color: var(--amber); }
-    a { color: inherit; }
+    a { color: var(--paper); }
+    a:where(:not([class])):hover { color: var(--amber); }
 
     /* ── OTHER STUFF :) ─────────────────────────────────────────────*/
     @keyframes dotPulse {
