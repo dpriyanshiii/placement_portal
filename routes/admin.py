@@ -211,12 +211,3 @@ def student_detail(student_id):
         student      = student,
         applications = applications,
     )
-
-
-
-# #--------------still onto it----------
-
-# def admin_required():
-#     if session.get('role') != 'admin':
-#         return redirect(url_for('auth.login'))
-#     return None

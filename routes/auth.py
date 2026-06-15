@@ -56,12 +56,6 @@ def login():
                 return redirect(url_for('home'))
             return redirect(url_for('company.dashboard'))
         
-    
-    #DEBUG!!!
-    # users = User.query.all()
-    # print("ALL USERS:")
-    # for u in users:
-    #     print(u.email, u.role)
 
     return render_template('auth/login.html')
 

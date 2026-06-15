@@ -30,23 +30,10 @@ app.register_blueprint(student, url_prefix='/student')
 
 from models import *
 
-
-# @app.route('/test')
-# def test():
-#     return render_template('index.html')
-
 #mian stufff
 @app.route('/')
 def home():
     return render_template('auth/index.html')
-    #return "<h1>Welcome to Placement Portal!</h1>"
-
-
-# #iffy
-# @app.route('/resume')
-# def resume():
-#     return "<h1>Resume Display Page</h1><h5>can be accessed by admin (via application page) and student</h5>"
-
 
 if __name__ == '__main__':
     with app.app_context():
