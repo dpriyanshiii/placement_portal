@@ -1,55 +1,195 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Manage Companies</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <h1>Manage Companies</h1>
-  <a href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+{% block title %}Companies{% endblock %}
 
-  <h3>Pending Approvals:</h3>
-  {% for c in pending %}
-  <p>
-    {{ c.company_name }} | {{ c.hr_fname }} {{ c.hr_lname }} | {{ c.hr_email }}
-    <a href="{{ url_for('admin.approve_company', company_id=c.company_id) }}">Approve</a>
-    <a href="{{ url_for('admin.reject_company', company_id=c.company_id) }}">Reject</a>
-  </p>
-  {% else %}
-  <p>No pending approvals.</p>
+{% block extra_head %}
+<style>
+  .admin-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
+
+  /* clickable rows */
+  .data-table tbody tr {
+    cursor: pointer;
+  }
+  .data-table tbody tr td:first-child {
+    border-left: 2px solid transparent;
+    transition: border-color 0.15s, background 0.12s;
+  }
+  .data-table tbody tr:hover td:first-child {
+    border-left-color: var(--amber);
+  }
+
+  /* stagger */
+  .data-table tbody tr {
+    opacity: 0;
+    animation: fadeUp 0.35s ease forwards;
+  }
+  {% for i in range(1, 30) %}
+  .data-table tbody tr:nth-child({{ i }}) { animation-delay: {{ 0.05 + i * 0.03 }}s; }
   {% endfor %}
 
-  <h3>All Companies:</h3>
-  <form method="GET" action="{{ url_for('admin.manage_companies') }}">
-    <input type="text" name="q" placeholder="Search by company name" value="{{ request.args.get('q', '') }}">
-    <input type="hidden" name="filter" value="{{ request.args.get('filter', 'all') }}">
-    <button type="submit">Search</button>
-  </form>
-  <br>
+  .search-wrap {
+    opacity: 0;
+    animation: fadeUp 0.4s ease forwards 0.15s;
+  }
 
-  <a href="{{ url_for('admin.manage_companies', filter='all', q=request.args.get('q', '')) }}">All</a>
-  |
-  <a href="{{ url_for('admin.manage_companies', filter='approved', q=request.args.get('q', '')) }}">Approved</a>
-  |
-  <a href="{{ url_for('admin.manage_companies', filter='pending', q=request.args.get('q', '')) }}">Pending</a>
-  |
-  <a href="{{ url_for('admin.manage_companies', filter='blacklisted', q=request.args.get('q', '')) }}">Blacklisted</a>
+  /* pending banner with approve/reject inline actions */
+  .approve-row td { vertical-align: middle; }
+  .approve-actions { display: flex; gap: 0.4rem; }
 
-  <p>Total: {{ companies|length }}</p>
+  /* section divider for pending */
+  .pending-section {
+    opacity: 0;
+    animation: fadeUp 0.4s ease forwards 0.2s;
+  }
+</style>
+{% endblock %}
 
-  {% for c in companies %}
-    <p>
-      {{ loop.index }}. {{ c.company_name }} |
-      {% if c.is_blacklisted %} Blacklisted
-      {% elif c.approval_status %} Approved
-      {% else %} Pending
-      {% endif %}
-      | <a href="{{ url_for('admin.company_detail', company_id=c.company_id) }}">View</a>
-    </p>
-  {% else %}
-    <p>No companies found.</p>
-  {% endfor %}
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('admin.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('admin.manage_students') }}">Students</a></li>
+    <li><a href="{{ url_for('admin.manage_companies') }}" class="active">Companies</a></li>
+    <li><a href="{{ url_for('admin.manage_drives') }}">Drives</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge admin">Admin</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
 
-</body>
-</html>
+{% block body %}
+<div class="admin-wrap">
+
+  <header class="page-header" data-label="Companies">
+    <p class="page-header__eyebrow">Administration</p>
+    <h1 class="page-header__title">Manage Companies</h1>
+    <p class="page-header__sub">Approve registrations, review company profiles, and manage status.</p>
+  </header>
+
+  <div class="content">
+
+    <!-- PENDING APPROVALS -->
+    {% if pending %}
+    <div class="pending-section">
+      <div class="section-head">
+        <h2>Pending Approvals</h2>
+        <span class="count">{{ pending | length }} waiting</span>
+      </div>
+      <div class="data-table-wrap" style="margin-bottom:2.5rem;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>HR Contact</th>
+              <th>Email</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in pending %}
+            <tr class="approve-row">
+              <td style="font-weight:500;">{{ c.company_name }}</td>
+              <td class="text-mono" style="font-size:0.8rem;color:var(--muted);">{{ c.hr_fname }} {{ c.hr_lname }}</td>
+              <td class="text-mono" style="font-size:0.78rem;color:var(--muted);">{{ c.hr_email }}</td>
+              <td>
+                <div class="approve-actions">
+                  <a href="{{ url_for('admin.approve_company', company_id=c.company_id) }}" class="btn btn-sm" style="background:rgba(79,140,68,0.15);color:#9fcd8a;border-color:rgba(79,140,68,0.3);">Approve</a>
+                  <a href="{{ url_for('admin.reject_company', company_id=c.company_id) }}" class="btn btn-sm btn-danger">Reject</a>
+                  <a href="{{ url_for('admin.company_detail', company_id=c.company_id) }}" class="btn btn-sm btn-outline">View →</a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- SEARCH + FILTER -->
+    <div class="search-wrap">
+      <form method="GET" action="{{ url_for('admin.manage_companies') }}">
+        <div class="search-bar">
+          <input type="text" name="q" placeholder="Search by company name…" value="{{ request.args.get('q', '') }}">
+          <input type="hidden" name="filter" value="{{ request.args.get('filter', 'all') }}">
+          <button type="submit" class="btn btn-outline">Search</button>
+          {% if request.args.get('q') %}
+            <a href="{{ url_for('admin.manage_companies', filter=request.args.get('filter', 'all')) }}" class="btn btn-outline">Clear</a>
+          {% endif %}
+        </div>
+      </form>
+      <div class="filter-tabs">
+        <a href="{{ url_for('admin.manage_companies', filter='all', q=request.args.get('q', '')) }}"
+           class="filter-tab {% if request.args.get('filter', 'all') == 'all' %}active{% endif %}">All</a>
+        <a href="{{ url_for('admin.manage_companies', filter='approved', q=request.args.get('q', '')) }}"
+           class="filter-tab {% if request.args.get('filter') == 'approved' %}active{% endif %}">Approved</a>
+        <a href="{{ url_for('admin.manage_companies', filter='pending', q=request.args.get('q', '')) }}"
+           class="filter-tab {% if request.args.get('filter') == 'pending' %}active{% endif %}">Pending</a>
+        <a href="{{ url_for('admin.manage_companies', filter='blacklisted', q=request.args.get('q', '')) }}"
+           class="filter-tab {% if request.args.get('filter') == 'blacklisted' %}active{% endif %}">Blacklisted</a>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="section-head">
+      <h2>All Companies</h2>
+      <span class="count">{{ companies | length }} record{{ 's' if companies | length != 1 else '' }}</span>
+    </div>
+
+    {% if companies %}
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Company</th>
+            <th>HR Contact</th>
+            <th>Website</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in companies %}
+          <tr onclick="window.location='{{ url_for('admin.company_detail', company_id=c.company_id) }}'">
+            <td class="text-mono" style="color:var(--muted);">{{ loop.index }}</td>
+            <td>
+              <div style="font-weight:500;">{{ c.company_name }}</div>
+            </td>
+            <td>
+              <div style="font-size:0.875rem;">{{ c.hr_fname }} {{ c.hr_lname }}</div>
+              <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);margin-top:0.2rem;">{{ c.hr_email }}</div>
+            </td>
+            <td class="text-mono" style="font-size:0.75rem;color:var(--muted);">
+              {% if c.website %}<a href="{{ c.website }}" target="_blank" onclick="event.stopPropagation();" style="color:var(--amber);text-decoration:none;">↗ {{ c.website | truncate(30, True) }}</a>{% else %}—{% endif %}
+            </td>
+            <td>
+              {% if c.is_blacklisted %}
+                <span class="badge badge-red">Blacklisted</span>
+              {% elif c.approval_status %}
+                <span class="badge badge-green">Approved</span>
+              {% else %}
+                <span class="badge badge-amber">Pending</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">No companies found{% if request.args.get('q') %} for "{{ request.args.get('q') }}"{% endif %}.</div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Admin Console{% endblock %}

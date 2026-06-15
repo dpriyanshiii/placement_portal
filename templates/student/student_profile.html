@@ -1,24 +1,146 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>My Profile</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+{% block title %}My Profile{% endblock %}
 
-  <h1>{{ student.f_name }} {{ student.l_name }}</h1>
-  <p>Email: {{ student.email }}</p>
-  <p>Department: {{ student.department }}</p>
-  <p>CGPA: {{ student.cgpa }}</p>
-  <p>Phone: {{ student.phone }}</p>
+{% block extra_head %}
+<style>
+  .page-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
-  {% if student.resume %}
-    <a href="{{ url_for('static', filename=student.resume.replace('static/', '').replace('\\', '/')) }}" target="_blank">View Resume</a>
-  {% endif %}
+  .detail-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.1s;
+  }
+  .detail-hero__avatar {
+    width: 80px; height: 80px;
+    border-radius: var(--r);
+    background: var(--line);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 900;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+  .detail-hero__name {
+    font-family: var(--font-display);
+    font-size: 2rem; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.2;
+  }
+  .detail-hero__meta {
+    color: var(--muted); font-size: 0.875rem; margin-top: 0.3rem;
+  }
+  .detail-hero__actions {
+    margin-left: auto;
+    display: flex; gap: 0.5rem; align-items: flex-start; flex-shrink: 0;
+  }
 
-  <a href="{{ url_for('student.edit_profile') }}">Edit Profile</a>
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.2s;
+  }
+</style>
+{% endblock %}
 
-</body>
-</html>
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('student.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('student.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('student.history') }}">History</a></li>
+    <li><a href="{{ url_for('student.profile') }}" class="active">Profile</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge student">Student</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+
+  <header class="page-header" data-label="Profile">
+    <p class="page-header__eyebrow"><a href="{{ url_for('student.dashboard') }}" style="color:var(--amber);text-decoration:none;">← Dashboard</a></p>
+    <h1 class="page-header__title">My Profile</h1>
+  </header>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="detail-hero">
+      <div class="detail-hero__avatar">{{ student.f_name[0] }}{{ student.l_name[0] }}</div>
+      <div>
+        <h2 class="detail-hero__name">{{ student.f_name }} {{ student.l_name }}</h2>
+        <p class="detail-hero__meta">{{ student.email }}</p>
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+          <span class="badge badge-muted">{{ student.department }}</span>
+          <span class="badge badge-amber">CGPA {{ student.cgpa }}</span>
+        </div>
+      </div>
+      <div class="detail-hero__actions">
+        {% if student.resume %}
+          <a href="{{ url_for('static', filename=student.resume.replace('static/', '').replace('\\', '/')) }}" target="_blank" class="btn btn-outline btn-sm">View Resume ↗</a>
+        {% endif %}
+        <a href="{{ url_for('student.edit_profile') }}" class="btn btn-sm btn-outline">Edit Profile</a>
+      </div>
+    </div>
+
+    <!-- DETAIL CARDS -->
+    <div class="detail-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">Personal Info</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Full Name</dt>
+            <dd>{{ student.f_name }} {{ student.l_name }}</dd>
+            <dt>Email</dt>
+            <dd>{{ student.email }}</dd>
+            <dt>Phone</dt>
+            <dd>{{ student.phone or '—' }}</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">Academic Info</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Department</dt>
+            <dd>{{ student.department }}</dd>
+            <dt>CGPA</dt>
+            <dd style="font-family:var(--font-mono);color:{% if student.cgpa >= 8.0 %}#9fcd8a{% elif student.cgpa >= 6.5 %}var(--amber){% else %}#e8957a{% endif %};">{{ student.cgpa }}</dd>
+            <dt>Resume</dt>
+            <dd>
+              {% if student.resume %}
+                <a href="{{ url_for('static', filename=student.resume.replace('static/', '').replace('\\', '/')) }}" target="_blank" style="color:var(--amber);">View PDF ↗</a>
+              {% else %}
+                Not uploaded
+              {% endif %}
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Student Console{% endblock %}

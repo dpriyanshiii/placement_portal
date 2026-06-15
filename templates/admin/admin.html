@@ -1,32 +1,432 @@
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
-</head>
-<body>
+{% block title %}Admin Dashboard{% endblock %}
 
-  <h1>Admin Dashboard</h1>
-  <a href="{{ url_for('auth.logout') }}">Log Out</a>
+{% block extra_head %}
+<style>
+  /* ── PAGE ENTRY ANIMATION ─────────────────────────────────── */
+  .admin-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
+  /* ── STAT TRIO ────────────────────────────────────────────── */
+  .stat-trio {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+  }
 
-  <h2>Overview</h2>
-  <p>Total Drives: {{ total_drives }}</p>
-  <p>Total Applications: {{ total_applications }}</p>
-  <p>Total Students: {{ total_students }}</p>
-  <p>Students Placed: {{ students_placed }}</p>
-  <p>Total Approved Companies: {{ total_companies }}</p>
-  <p>Pending Company Approvals: {{ pending_approvals }}</p>
-  
+  .stat-hero {
+    position: relative;
+    overflow: hidden;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1.5rem;
+    cursor: default;
+  }
 
-  <h2>Manage</h2>
-  <a href="{{ url_for('admin.manage_students') }}">Manage Students</a>
-  <br>
-  <a href="{{ url_for('admin.manage_companies') }}">Manage Companies</a>
-  <br>
-  <a href="{{ url_for('admin.manage_drives') }}">Manage Drives</a>
+  /* bg image - each card shows a different crop of the same photo */
+  .stat-hero__bg {
+    position: absolute;
+    inset: 0;
+    background-image: url("{{ url_for('static', filename='indexbg.jpg') }}");
+    background-size: cover;
+    background-position: center top;
+    opacity: 0.22;
+    mix-blend-mode: luminosity;
+    transition: opacity 0.4s, transform 0.6s ease;
+  }
+  .stat-hero:nth-child(2) .stat-hero__bg { background-position: center center; }
+  .stat-hero:nth-child(3) .stat-hero__bg { background-position: center bottom; }
 
-</body>
-</html>
+  /* amber gradient that sits above the photo */
+  .stat-hero__glow {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(232,160,32,0.08) 0%,
+      transparent 60%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  .stat-hero:hover .stat-hero__bg {
+    opacity: 0.35;
+    transform: scale(1.04);
+  }
+  .stat-hero:hover .stat-hero__glow { opacity: 1; }
+
+  /* bottom-left rule that draws on hover */
+  .stat-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 2px;
+    width: 0;
+    background: var(--amber);
+    transition: width 0.4s ease;
+  }
+  .stat-hero:hover::after { width: 100%; }
+
+  /* overlay dark gradient so text is readable */
+  .stat-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(13,13,13,0.92) 0%,
+      rgba(13,13,13,0.55) 55%,
+      rgba(13,13,13,0.2) 100%
+    );
+    pointer-events: none;
+  }
+
+  .stat-hero__content {
+    position: relative;
+    z-index: 1;
+  }
+  .stat-hero__label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .stat-hero__label::before {
+    content: '';
+    display: inline-block;
+    width: 16px; height: 1px;
+    background: var(--amber);
+  }
+  .stat-hero__num {
+    font-family: var(--font-display);
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--paper);
+    /* count-up animation: elements stagger in */
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeUp 0.45s ease forwards;
+  }
+  .stat-hero:nth-child(1) .stat-hero__num { animation-delay: 0.25s; }
+  .stat-hero:nth-child(2) .stat-hero__num { animation-delay: 0.4s; }
+  .stat-hero:nth-child(3) .stat-hero__num { animation-delay: 0.55s; }
+
+  .stat-hero__sub {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--amber);
+    margin-top: 0.3rem;
+    opacity: 0.8;
+  }
+
+  /* top-right ghost number watermark */
+  .stat-hero__watermark {
+    position: absolute;
+    top: 0.75rem;
+    right: 1rem;
+    font-family: var(--font-display);
+    font-size: 5rem;
+    font-weight: 900;
+    color: rgba(255,255,255,0.03);
+    line-height: 1;
+    pointer-events: none;
+    z-index: 0;
+    letter-spacing: -0.06em;
+  }
+
+  /* ── QUICK ACTIONS ────────────────────────────────────────── */
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+  }
+
+  .action-card {
+    background: var(--card-bg);
+    padding: 1.75rem 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards;
+  }
+  .action-card:nth-child(1) { animation-delay: 0.3s; border-left-color: var(--amber); }
+  .action-card:nth-child(2) { animation-delay: 0.42s; border-left-color: #7ec8e3; }
+  .action-card:nth-child(3) { animation-delay: 0.54s; border-left-color: #9fcd8a; }
+
+  .action-card:hover { background: #1c1916; }
+
+  .action-card__icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  .action-card__title {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .action-card__sub {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .action-card__arrow {
+    position: absolute;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    font-size: 1rem;
+    color: var(--amber);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .action-card:hover .action-card__arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* ── PENDING APPROVALS BANNER ─────────────────────────────── */
+  .pending-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(232,160,32,0.08);
+    border: 1px solid rgba(232,160,32,0.25);
+    border-left: 3px solid var(--amber);
+    border-radius: var(--r);
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    font-size: 0.875rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.2s;
+  }
+  .pending-banner .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--amber);
+    flex-shrink: 0;
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  .pending-banner strong {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--amber);
+  }
+  .pending-banner a {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--amber);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(232,160,32,0.3);
+    padding-bottom: 1px;
+    transition: border-color 0.15s;
+  }
+  .pending-banner a:hover { border-color: var(--amber); }
+
+  /* ── MINI STATS ROW ───────────────────────────────────────── */
+  .mini-stats {
+    display: flex;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.6s;
+  }
+  .mini-stat {
+    flex: 1;
+    background: var(--card-bg);
+    padding: 1rem 1.25rem;
+    text-align: center;
+  }
+  .mini-stat__num {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--paper);
+  }
+  .mini-stat__label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+  .mini-stat.highlight .mini-stat__num { color: var(--amber); }
+</style>
+{% endblock %}
+
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('admin.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('admin.dashboard') }}" class="active">Dashboard</a></li>
+    <li><a href="{{ url_for('admin.manage_students') }}">Students</a></li>
+    <li><a href="{{ url_for('admin.manage_companies') }}">Companies</a></li>
+    <li><a href="{{ url_for('admin.manage_drives') }}">Drives</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge admin">Admin</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="admin-wrap">
+
+  <header class="page-header" data-label="Admin">
+    <p class="page-header__eyebrow">Institute Administration</p>
+    <h1 class="page-header__title">Dashboard</h1>
+    <p class="page-header__sub">Overview of the placement portal — students, companies, and active drives.</p>
+  </header>
+
+  <div class="content">
+
+    {% if pending_approvals > 0 %}
+    <div class="pending-banner">
+      <span class="dot"></span>
+      <span><strong>{{ pending_approvals }} company registration{{ 's' if pending_approvals != 1 else '' }}</strong> awaiting your approval.</span>
+      <a href="{{ url_for('admin.manage_companies') }}?filter=pending">Review →</a>
+    </div>
+    {% endif %}
+
+    <!-- THREE STAT HERO CARDS -->
+    <div class="stat-trio">
+
+      <div class="stat-hero">
+        <div class="stat-hero__bg"></div>
+        <div class="stat-hero__overlay"></div>
+        <div class="stat-hero__glow"></div>
+        <span class="stat-hero__watermark">S</span>
+        <div class="stat-hero__content">
+          <p class="stat-hero__label">Students</p>
+          <p class="stat-hero__num">{{ total_students }}</p>
+          <p class="stat-hero__sub">{{ students_placed }} placed</p>
+        </div>
+      </div>
+
+      <div class="stat-hero">
+        <div class="stat-hero__bg"></div>
+        <div class="stat-hero__overlay"></div>
+        <div class="stat-hero__glow"></div>
+        <span class="stat-hero__watermark">C</span>
+        <div class="stat-hero__content">
+          <p class="stat-hero__label">Companies</p>
+          <p class="stat-hero__num">{{ total_companies }}</p>
+          <p class="stat-hero__sub">approved &amp; active</p>
+        </div>
+      </div>
+
+      <div class="stat-hero">
+        <div class="stat-hero__bg"></div>
+        <div class="stat-hero__overlay"></div>
+        <div class="stat-hero__glow"></div>
+        <span class="stat-hero__watermark">D</span>
+        <div class="stat-hero__content">
+          <p class="stat-hero__label">Drives</p>
+          <p class="stat-hero__num">{{ total_drives }}</p>
+          <p class="stat-hero__sub">{{ total_applications }} total applications</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- QUICK NAV CARDS -->
+    <div class="section-head">
+      <h2>Manage</h2>
+    </div>
+
+    <div class="action-grid">
+      <a href="{{ url_for('admin.manage_students') }}" class="action-card">
+        <span class="action-card__icon">  </span>
+        <p class="action-card__title">Students</p>
+        <p class="action-card__sub">Search · View · Blacklist</p>
+        <span class="action-card__arrow">→</span>
+      </a>
+      <a href="{{ url_for('admin.manage_companies') }}" class="action-card">
+        <span class="action-card__icon">  </span>
+        <p class="action-card__title">Companies</p>
+        <p class="action-card__sub">Approve · Reject · Manage</p>
+        <span class="action-card__arrow">→</span>
+      </a>
+      <a href="{{ url_for('admin.manage_drives') }}" class="action-card">
+        <span class="action-card__icon">  </span>
+        <p class="action-card__title">Drives</p>
+        <p class="action-card__sub">Browse · Complete · Track</p>
+        <span class="action-card__arrow">→</span>
+      </a>
+    </div>
+
+    <!-- MINI STATS ROW -->
+    <div class="mini-stats">
+      <div class="mini-stat highlight">
+        <p class="mini-stat__num">{{ pending_approvals }}</p>
+        <p class="mini-stat__label">Pending Approvals</p>
+      </div>
+      <div class="mini-stat">
+        <p class="mini-stat__num">{{ total_applications }}</p>
+        <p class="mini-stat__label">Total Applications</p>
+      </div>
+      <div class="mini-stat">
+        <p class="mini-stat__num">{{ students_placed }}</p>
+        <p class="mini-stat__label">Students Placed</p>
+      </div>
+      <div class="mini-stat">
+        <p class="mini-stat__num">{{ total_drives }}</p>
+        <p class="mini-stat__label">All Drives</p>
+      </div>
+      <div class="mini-stat">
+        <p class="mini-stat__num">{{ total_students }}</p>
+        <p class="mini-stat__label">Registered Students</p>
+      </div>
+      <div class="mini-stat">
+        <p class="mini-stat__num">{{ total_companies }}</p>
+        <p class="mini-stat__label">Active Companies</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Admin Console{% endblock %}

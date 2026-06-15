@@ -1,46 +1,171 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Company Dashboard</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <h1>{{ company.company_name }} Dashboard</h1>
-  <a href="{{ url_for('auth.logout') }}">Log Out</a>
-  <br>
-  <a href="{{ url_for('company.profile') }}">View Profile</a>
-  <br>
-  <a href="{{ url_for('company.create_drive') }}">Create New Drive</a>
+{% block title %}Company Dashboard{% endblock %}
 
-<h2>Ongoing Drives</h2>
-{% set ongoing = drives | selectattr('status', 'equalto', False) | list %}
-{% if ongoing %}
-  {% for d in ongoing %}
-    <p>
-      {{ loop.index }}. {{ d.drive_name }} | {{ d.job_title }} | Deadline: {{ d.deadline.strftime('%Y-%m-%d') }}
-      | <a href="{{ url_for('company.drive_applications', drive_id=d.drive_id) }}">View Applications</a>
-      | <a href="{{ url_for('company.edit_drive', drive_id=d.drive_id) }}">Edit</a>
-      | <a href="{{ url_for('company.delete_drive', drive_id=d.drive_id) }}">Delete</a>
-      | <a href="{{ url_for('company.close_drive', drive_id=d.drive_id) }}">Mark Complete</a>
-    </p>
-  {% endfor %}
-{% else %}
-  <p>No ongoing drives.</p>
-{% endif %}
+{% block extra_head %}
+<style>
+  .page-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
-<h2>Completed Drives</h2>
-{% set completed = drives | selectattr('status', 'equalto', True) | list %}
-{% if completed %}
-  {% for d in completed %}
-    <p>
-      {{ loop.index }}. {{ d.drive_name }} | {{ d.job_title }} | Deadline: {{ d.deadline.strftime('%Y-%m-%d') }}
-      | <a href="{{ url_for('company.drive_applications', drive_id=d.drive_id) }}">View Applications</a>
-    </p>
-  {% endfor %}
-{% else %}
-  <p>No completed drives.</p>
-{% endif %}
+  .stat-row {
+    display: flex;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: fadeUp 0.4s ease forwards 0.1s;
+  }
+  .stat-row__cell {
+    flex: 1;
+    background: var(--card-bg);
+    padding: 1rem 1.5rem;
+    text-align: center;
+  }
+  .stat-row__num {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--amber);
+  }
+  .stat-row__label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
 
-</body>
-</html>
+  .section {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.2s;
+  }
+  .section + .section {
+    animation-delay: 0.32s;
+  }
+</style>
+{% endblock %}
+
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('company.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('company.dashboard') }}" class="active">Dashboard</a></li>
+    <li><a href="{{ url_for('company.profile') }}">Profile</a></li>
+    <li><a href="{{ url_for('company.create_drive') }}">New Drive</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge company">Company</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+
+  <header class="page-header" data-label="Drives">
+    <p class="page-header__eyebrow">Company Portal</p>
+    <h1 class="page-header__title">{{ company.company_name }}</h1>
+    <p class="page-header__sub">Manage your placement drives and review applicants.</p>
+  </header>
+
+  <div class="content">
+
+    {% set ongoing = drives | selectattr('status', 'equalto', False) | list %}
+    {% set completed = drives | selectattr('status', 'equalto', True) | list %}
+
+    <div class="stat-row">
+      <div class="stat-row__cell">
+        <p class="stat-row__num">{{ ongoing | length }}</p>
+        <p class="stat-row__label">Ongoing Drives</p>
+      </div>
+      <div class="stat-row__cell">
+        <p class="stat-row__num">{{ completed | length }}</p>
+        <p class="stat-row__label">Completed Drives</p>
+      </div>
+      <div class="stat-row__cell">
+        <p class="stat-row__num">{{ drives | length }}</p>
+        <p class="stat-row__label">Total Drives</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Ongoing Drives</h2>
+        <span class="count">{{ ongoing | length }} active</span>
+      </div>
+
+      {% if ongoing %}
+      <div class="drive-grid">
+        {% for d in ongoing %}
+        <div class="drive-card">
+          <div>
+            <p class="drive-card__title">{{ d.drive_name }}</p>
+            <p class="drive-card__role">{{ d.job_title }}</p>
+          </div>
+          <div class="drive-card__meta">
+            {% if d.location %}<span class="badge badge-blue">{{ d.location }}</span>{% endif %}
+            {% if d.salary %}<span class="badge badge-amber">{{ d.salary }}</span>{% endif %}
+            <span class="badge badge-green">Ongoing</span>
+          </div>
+          <p class="drive-card__deadline">Deadline: {{ d.deadline.strftime('%d %b %Y, %H:%M') }}</p>
+          <div class="drive-card__actions">
+            <a href="{{ url_for('company.drive_applications', drive_id=d.drive_id) }}" class="btn btn-sm btn-outline">Applications</a>
+            <a href="{{ url_for('company.edit_drive', drive_id=d.drive_id) }}" class="btn btn-sm btn-outline">Edit</a>
+            <a href="{{ url_for('company.close_drive', drive_id=d.drive_id) }}" class="btn btn-sm btn-outline"
+               onclick="return confirm('Mark {{ d.drive_name }} as complete?');">Mark Complete</a>
+            <a href="{{ url_for('company.delete_drive', drive_id=d.drive_id) }}" class="btn btn-sm btn-danger"
+               onclick="return confirm('Delete {{ d.drive_name }}? This cannot be undone.');">Delete</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">No ongoing drives. <a href="{{ url_for('company.create_drive') }}" style="color:var(--amber);">Create one →</a></div>
+      {% endif %}
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <h2>Completed Drives</h2>
+        <span class="count">{{ completed | length }} completed</span>
+      </div>
+
+      {% if completed %}
+      <div class="drive-grid">
+        {% for d in completed %}
+        <div class="drive-card">
+          <div>
+            <p class="drive-card__title">{{ d.drive_name }}</p>
+            <p class="drive-card__role">{{ d.job_title }}</p>
+          </div>
+          <div class="drive-card__meta">
+            {% if d.location %}<span class="badge badge-blue">{{ d.location }}</span>{% endif %}
+            {% if d.salary %}<span class="badge badge-amber">{{ d.salary }}</span>{% endif %}
+            <span class="badge badge-muted">Completed</span>
+          </div>
+          <p class="drive-card__deadline">Deadline: {{ d.deadline.strftime('%d %b %Y, %H:%M') }}</p>
+          <div class="drive-card__actions">
+            <a href="{{ url_for('company.drive_applications', drive_id=d.drive_id) }}" class="btn btn-sm btn-outline">View Applications</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">No completed drives yet.</div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Company Console{% endblock %}

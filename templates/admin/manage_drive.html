@@ -1,46 +1,171 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Manage Drives</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <h1>Manage Drives</h1>
-  <a href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
-  <br>
-  <br>
-  <h3>All Drives:</h3>
-  <br>
+{% block title %}Drives{% endblock %}
 
-  <form method="GET" action="{{ url_for('admin.manage_drives') }}">
-    <input type="text" name="q" placeholder="Search by drive or company name" value="{{ request.args.get('q', '') }}">
-    <input type="hidden" name="filter" value="{{ request.args.get('filter', 'all') }}">
-    <button type="submit">Search</button>
-  </form>
-  <br>
+{% block extra_head %}
+<style>
+  .admin-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
-  <a href="{{ url_for('admin.manage_drives', filter='all', q=request.args.get('q', '')) }}">All</a>
-  |
-  <a href="{{ url_for('admin.manage_drives', filter='ongoing', q=request.args.get('q', '')) }}">Ongoing</a>
-  |
-  <a href="{{ url_for('admin.manage_drives', filter='completed', q=request.args.get('q', '')) }}">Completed</a>
+  .data-table tbody tr {
+    cursor: pointer;
+  }
+  .data-table tbody tr td:first-child {
+    border-left: 2px solid transparent;
+    transition: border-color 0.15s, background 0.12s;
+  }
+  .data-table tbody tr:hover td:first-child {
+    border-left-color: var(--amber);
+  }
 
-  <p>Total Ongoing: {{ ongoing_drives|length }} | Total Completed: {{ past_drives|length }}</p>
-
-  {% for d in all_drives %}
-    <p>
-      {{ loop.index }}. {{ d.drive_name }} | {{ d.company.company_name }} | Deadline: {{ d.deadline.strftime('%Y-%m-%d') }}
-      | <a href="{{ url_for('admin.drive_detail', drive_id=d.drive_id) }}">View</a>
-      | {% if d.status %}
-          Completed
-        {% else %}
-          <a href="{{ url_for('admin.complete_drive', drive_id=d.drive_id) }}">Mark Complete</a>
-        {% endif %}
-    </p>
-  {% else %}
-    <p>No drives found.</p>
+  .data-table tbody tr {
+    opacity: 0;
+    animation: fadeUp 0.35s ease forwards;
+  }
+  {% for i in range(1, 30) %}
+  .data-table tbody tr:nth-child({{ i }}) { animation-delay: {{ 0.05 + i * 0.03 }}s; }
   {% endfor %}
 
-</body>
-</html>
+  .search-wrap {
+    opacity: 0;
+    animation: fadeUp 0.4s ease forwards 0.15s;
+  }
+
+  /* deadline urgency */
+  .deadline-near { color: #e8957a; }
+  .deadline-ok   { color: var(--muted); }
+</style>
+{% endblock %}
+
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('admin.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('admin.manage_students') }}">Students</a></li>
+    <li><a href="{{ url_for('admin.manage_companies') }}">Companies</a></li>
+    <li><a href="{{ url_for('admin.manage_drives') }}" class="active">Drives</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge admin">Admin</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="admin-wrap">
+
+  <header class="page-header" data-label="Drives">
+    <p class="page-header__eyebrow">Administration</p>
+    <h1 class="page-header__title">Manage Drives</h1>
+    <p class="page-header__sub">Browse placement drives, track applications, and mark completions.</p>
+  </header>
+
+  <div class="content">
+
+    <!-- MINI STAT ROW -->
+    <div style="display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:2rem;opacity:0;animation:fadeUp 0.4s ease forwards 0.1s;">
+      <div style="flex:1;background:var(--card-bg);padding:1rem 1.5rem;text-align:center;">
+        <p style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--amber);">{{ ongoing_drives | length }}</p>
+        <p style="font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:0.2rem;">Ongoing</p>
+      </div>
+      <div style="flex:1;background:var(--card-bg);padding:1rem 1.5rem;text-align:center;">
+        <p style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--paper);">{{ past_drives | length }}</p>
+        <p style="font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:0.2rem;">Completed</p>
+      </div>
+      <div style="flex:1;background:var(--card-bg);padding:1rem 1.5rem;text-align:center;">
+        <p style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--paper);">{{ all_drives | length }}</p>
+        <p style="font-family:var(--font-mono);font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:0.2rem;">Total</p>
+      </div>
+    </div>
+
+    <!-- SEARCH + FILTER -->
+    <div class="search-wrap">
+      <form method="GET" action="{{ url_for('admin.manage_drives') }}">
+        <div class="search-bar">
+          <input type="text" name="q" placeholder="Search by drive or company name…" value="{{ request.args.get('q', '') }}">
+          <input type="hidden" name="filter" value="{{ request.args.get('filter', 'all') }}">
+          <button type="submit" class="btn btn-outline">Search</button>
+          {% if request.args.get('q') %}
+            <a href="{{ url_for('admin.manage_drives', filter=request.args.get('filter', 'all')) }}" class="btn btn-outline">Clear</a>
+          {% endif %}
+        </div>
+      </form>
+      <div class="filter-tabs">
+        <a href="{{ url_for('admin.manage_drives', filter='all', q=request.args.get('q', '')) }}"
+           class="filter-tab {% if request.args.get('filter', 'all') == 'all' %}active{% endif %}">All</a>
+        <a href="{{ url_for('admin.manage_drives', filter='ongoing', q=request.args.get('q', '')) }}"
+           class="filter-tab {% if request.args.get('filter') == 'ongoing' %}active{% endif %}">Ongoing</a>
+        <a href="{{ url_for('admin.manage_drives', filter='completed', q=request.args.get('q', '')) }}"
+           class="filter-tab {% if request.args.get('filter') == 'completed' %}active{% endif %}">Completed</a>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="section-head">
+      <h2>All Drives</h2>
+      <span class="count">{{ all_drives | length }} record{{ 's' if all_drives | length != 1 else '' }}</span>
+    </div>
+
+    {% if all_drives %}
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Drive</th>
+            <th>Company</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in all_drives %}
+          <tr onclick="window.location='{{ url_for('admin.drive_detail', drive_id=d.drive_id) }}'">
+            <td class="text-mono" style="color:var(--muted);">{{ loop.index }}</td>
+            <td>
+              <div style="font-weight:500;">{{ d.drive_name }}</div>
+              <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);margin-top:0.2rem;">{{ d.job_title }}</div>
+            </td>
+            <td style="font-size:0.875rem;">{{ d.company.company_name }}</td>
+            <td>
+              <span class="text-mono deadline-ok" style="font-size:0.78rem;">{{ d.deadline.strftime('%d %b %Y') }}</span>
+            </td>
+            <td>
+              {% if d.status %}
+                <span class="badge badge-muted">Completed</span>
+              {% else %}
+                <span class="badge badge-green">Ongoing</span>
+              {% endif %}
+            </td>
+            <td onclick="event.stopPropagation();">
+              {% if not d.status %}
+                <a href="{{ url_for('admin.complete_drive', drive_id=d.drive_id) }}"
+                   class="btn btn-sm btn-outline"
+                   onclick="return confirm('Mark this drive as complete?');">
+                  Mark Complete
+                </a>
+              {% else %}
+                <span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">No drives found{% if request.args.get('q') %} for "{{ request.args.get('q') }}"{% endif %}.</div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Admin Console{% endblock %}

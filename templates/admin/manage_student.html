@@ -1,30 +1,141 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Manage Students</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <h1>Manage Students</h1>
-  <a href="{{ url_for('admin.dashboard') }}">Back to Dashboard</a>
+{% block title %}Students{% endblock %}
 
-  <h2>Search</h2>
-  <form method="GET" action="{{ url_for('admin.manage_students') }}">
-    <input type="text" name="q" placeholder="Search by name, ID, or phone" value="{{ request.args.get('q', '') }}">
-    <button type="submit">Search</button>
-  </form>
+{% block extra_head %}
+<style>
+  .admin-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
-  <h3>All Students:</h3>
-  {% for s in students %}
-    <p>
-      {{ loop.index }}. {{ s.f_name }} {{ s.l_name }} | {{ s.department }} | CGPA: {{ s.cgpa }} |
-      {% if s.is_blacklisted %} Blacklisted {% else %} Active {% endif %}
-      | <a href="{{ url_for('admin.student_detail', student_id=s.student_id) }}">View</a>
-    </p>
-  {% else %}
-    <p>No students found.</p>
+  /* clickable rows */
+  .data-table tbody tr {
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .data-table tbody tr:hover td {
+    background: var(--card-bg);
+  }
+  /* subtle left flash on hover */
+  .data-table tbody tr td:first-child {
+    border-left: 2px solid transparent;
+    transition: border-color 0.15s, background 0.12s;
+  }
+  .data-table tbody tr:hover td:first-child {
+    border-left-color: var(--amber);
+  }
+
+  /* row entry stagger */
+  .data-table tbody tr {
+    opacity: 0;
+    animation: fadeUp 0.35s ease forwards;
+  }
+  {% for i in range(1, 30) %}
+  .data-table tbody tr:nth-child({{ i }}) { animation-delay: {{ 0.05 + i * 0.03 }}s; }
   {% endfor %}
 
-</body>
-</html>
+  .search-wrap {
+    opacity: 0;
+    animation: fadeUp 0.4s ease forwards 0.15s;
+  }
+</style>
+{% endblock %}
+
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('admin.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('admin.manage_students') }}" class="active">Students</a></li>
+    <li><a href="{{ url_for('admin.manage_companies') }}">Companies</a></li>
+    <li><a href="{{ url_for('admin.manage_drives') }}">Drives</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge admin">Admin</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="admin-wrap">
+
+  <header class="page-header" data-label="Students">
+    <p class="page-header__eyebrow">Administration</p>
+    <h1 class="page-header__title">Manage Students</h1>
+    <p class="page-header__sub">Search, view profiles, and manage student status.</p>
+  </header>
+
+  <div class="content">
+
+    <!-- SEARCH BAR -->
+    <div class="search-wrap">
+      <form method="GET" action="{{ url_for('admin.manage_students') }}">
+        <div class="search-bar">
+          <input type="text" name="q" placeholder="Search by name, ID, or phone…" value="{{ request.args.get('q', '') }}">
+          <button type="submit" class="btn btn-outline">Search</button>
+          {% if request.args.get('q') %}
+            <a href="{{ url_for('admin.manage_students') }}" class="btn btn-outline">Clear</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+
+    <!-- TABLE -->
+    <div class="section-head">
+      <h2>All Students</h2>
+      <span class="count">{{ students | length }} record{{ 's' if students | length != 1 else '' }}</span>
+    </div>
+
+    {% if students %}
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>CGPA</th>
+            <th>Phone</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr onclick="window.location='{{ url_for('admin.student_detail', student_id=s.student_id) }}'">
+            <td class="text-mono" style="color:var(--muted);">{{ loop.index }}</td>
+            <td>
+              <div style="font-weight:500;">{{ s.f_name }} {{ s.l_name }}</div>
+              <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);margin-top:0.2rem;">{{ s.email }}</div>
+            </td>
+            <td class="text-mono" style="font-size:0.8rem;">{{ s.department }}</td>
+            <td>
+              <span style="font-family:var(--font-mono);font-size:0.85rem;color:{% if s.cgpa >= 8.0 %}#9fcd8a{% elif s.cgpa >= 6.5 %}var(--amber){% else %}#e8957a{% endif %};">
+                {{ s.cgpa }}
+              </span>
+            </td>
+            <td class="text-mono" style="font-size:0.8rem;color:var(--muted);">{{ s.phone or '—' }}</td>
+            <td>
+              {% if s.is_blacklisted %}
+                <span class="badge badge-red">Blacklisted</span>
+              {% else %}
+                <span class="badge badge-green">Active</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">No students found{% if request.args.get('q') %} for "{{ request.args.get('q') }}"{% endif %}.</div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Admin Console{% endblock %}

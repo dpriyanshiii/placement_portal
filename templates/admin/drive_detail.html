@@ -1,42 +1,277 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>{{ drive.drive_name }}</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <a href="{{ url_for('admin.manage_drives') }}">Back to Drives</a>
+{% block title %}{{ drive.drive_name }}{% endblock %}
 
-  <h1>{{ drive.drive_name }}</h1>
-  {% if company.logo %}
-  <img src="{{ url_for('static', filename=company.logo.replace('static/', '').replace('\\', '/')) }}" alt="Logo" width="80">
-  {% endif %}
-  <p>Company: {{ company.company_name }}</p>
-  <p>Job Title: {{ drive.job_title }}</p>
-  <p>Description: {{ drive.job_description }}</p>
-  <p>Eligibility: {{ drive.eligibility_criteria }}</p>
-  <p>Salary: {{ drive.salary }}</p>
-  <p>Location: {{ drive.location }}</p>
-  <p>Deadline: {{ drive.deadline.strftime('%Y-%m-%d') }}</p>
-  <p>Status: {% if drive.status %} Completed {% else %} Ongoing {% endif %}</p>
+{% block extra_head %}
+<style>
+  .admin-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
-  {% if not drive.status %}
-    <a href="{{ url_for('admin.complete_drive', drive_id=drive.drive_id) }}">Mark Complete</a>
-  {% endif %}
+  .detail-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.1s;
+  }
+  .detail-hero__logo {
+    width: 64px; height: 64px;
+    object-fit: contain;
+    border-radius: var(--r);
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    padding: 0.4rem;
+    flex-shrink: 0;
+  }
+  .detail-hero__initials {
+    width: 64px; height: 64px;
+    border-radius: var(--r);
+    background: var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.3rem; font-weight: 900;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+  .detail-hero__title {
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.2;
+  }
+  .detail-hero__actions {
+    margin-left: auto;
+    display: flex; gap: 0.5rem; align-items: flex-start; flex-shrink: 0;
+  }
 
-  <h2>Applications</h2>
-  <p>Total Applicants: {{ applications|length }}</p>
-  {% for a in applications %}
-    <p>
-      {{ loop.index }}. {{ a.student.f_name }} {{ a.student.l_name }} |
-      {{ a.student.department }} | CGPA: {{ a.student.cgpa }} |
-      Status: {{ a.status }}
-      {% if a.remarks %} | Remarks: {{ a.remarks }} {% endif %}
-    </p>
-  {% else %}
-    <p>No applications yet.</p>
-  {% endfor %}
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.2s;
+  }
 
-</body>
-</html>
+  .apps-section {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.35s;
+  }
+
+  /* applicant count stat */
+  .drive-stat-strip {
+    display: flex;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.25s;
+  }
+  .drive-stat-strip__cell {
+    flex: 1;
+    background: var(--card-bg);
+    padding: 1rem 1.25rem;
+    text-align: center;
+  }
+  .drive-stat-strip__num {
+    font-family: var(--font-display);
+    font-size: 1.75rem; font-weight: 900;
+    color: var(--amber);
+  }
+  .drive-stat-strip__label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    margin-top: 0.2rem;
+  }
+</style>
+{% endblock %}
+
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('admin.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('admin.manage_students') }}">Students</a></li>
+    <li><a href="{{ url_for('admin.manage_companies') }}">Companies</a></li>
+    <li><a href="{{ url_for('admin.manage_drives') }}" class="active">Drives</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge admin">Admin</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="admin-wrap">
+
+  <header class="page-header" data-label="Drive">
+    <p class="page-header__eyebrow"><a href="{{ url_for('admin.manage_drives') }}" style="color:var(--amber);text-decoration:none;">← Drives</a></p>
+    <h1 class="page-header__title">Drive Detail</h1>
+  </header>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="detail-hero">
+      {% if company.logo %}
+        <img src="{{ url_for('static', filename=company.logo.replace('static/', '').replace('\\', '/')) }}" alt="Logo" class="detail-hero__logo">
+      {% else %}
+        <div class="detail-hero__initials">{{ company.company_name[0] }}</div>
+      {% endif %}
+      <div>
+        <p style="font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);margin-bottom:0.3rem;">
+          {{ company.company_name }}
+        </p>
+        <h2 class="detail-hero__title">{{ drive.drive_name }}</h2>
+        <p style="color:var(--muted);font-size:0.875rem;margin-top:0.3rem;">{{ drive.job_title }}</p>
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+          {% if drive.status %}
+            <span class="badge badge-muted">Completed</span>
+          {% else %}
+            <span class="badge badge-green">Ongoing</span>
+          {% endif %}
+          {% if drive.location %}
+            <span class="badge badge-blue">{{ drive.location }}</span>
+          {% endif %}
+          {% if drive.salary %}
+            <span class="badge badge-amber">{{ drive.salary }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% if not drive.status %}
+      <div class="detail-hero__actions">
+        <a href="{{ url_for('admin.complete_drive', drive_id=drive.drive_id) }}"
+           class="btn btn-outline btn-sm"
+           onclick="return confirm('Mark {{ drive.drive_name }} as complete?');">
+          Mark Complete
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- DETAIL CARDS -->
+    <div class="detail-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">Drive Info</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Company</dt>
+            <dd><a href="{{ url_for('admin.company_detail', company_id=company.company_id) }}" style="color:var(--amber);">{{ company.company_name }} ↗</a></dd>
+            <dt>Job Title</dt>
+            <dd>{{ drive.job_title }}</dd>
+            <dt>Location</dt>
+            <dd>{{ drive.location or '—' }}</dd>
+            <dt>Salary</dt>
+            <dd>{{ drive.salary or '—' }}</dd>
+            <dt>Deadline</dt>
+            <dd style="font-family:var(--font-mono);font-size:0.85rem;">{{ drive.deadline.strftime('%d %b %Y') }}</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">Requirements</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Eligibility</dt>
+            <dd style="color:var(--muted);line-height:1.6;">{{ drive.eligibility_criteria or '—' }}</dd>
+            <dt>Description</dt>
+            <dd style="color:var(--muted);line-height:1.6;">{{ drive.job_description or '—' }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPLICANT STATS -->
+    <div class="drive-stat-strip">
+      <div class="drive-stat-strip__cell">
+        <p class="drive-stat-strip__num">{{ applications | length }}</p>
+        <p class="drive-stat-strip__label">Total Applicants</p>
+      </div>
+      <div class="drive-stat-strip__cell">
+        <p class="drive-stat-strip__num">{{ applications | selectattr('status', 'equalto', 'shortlisted') | list | length }}</p>
+        <p class="drive-stat-strip__label">Shortlisted</p>
+      </div>
+      <div class="drive-stat-strip__cell">
+        <p class="drive-stat-strip__num">{{ applications | selectattr('status', 'equalto', 'hired') | list | length }}</p>
+        <p class="drive-stat-strip__label">Hired</p>
+      </div>
+      <div class="drive-stat-strip__cell">
+        <p class="drive-stat-strip__num">{{ applications | selectattr('status', 'equalto', 'rejected') | list | length }}</p>
+        <p class="drive-stat-strip__label">Rejected</p>
+      </div>
+    </div>
+
+    <!-- APPLICATIONS TABLE -->
+    <div class="apps-section">
+      <div class="section-head">
+        <h2>Applicants</h2>
+        <span class="count">{{ applications | length }}</span>
+      </div>
+
+      {% if applications %}
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student</th>
+              <th>Department</th>
+              <th>CGPA</th>
+              <th>Status</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in applications %}
+            <tr style="cursor:pointer;" onclick="window.location='{{ url_for('admin.student_detail', student_id=a.student.student_id) }}'">
+              <td class="text-mono" style="color:var(--muted);">{{ loop.index }}</td>
+              <td>
+                <div style="font-weight:500;">{{ a.student.f_name }} {{ a.student.l_name }}</div>
+                <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);margin-top:0.15rem;">{{ a.student.email }}</div>
+              </td>
+              <td class="text-mono" style="font-size:0.8rem;">{{ a.student.department }}</td>
+              <td>
+                <span style="font-family:var(--font-mono);font-size:0.85rem;color:{% if a.student.cgpa >= 8.0 %}#9fcd8a{% elif a.student.cgpa >= 6.5 %}var(--amber){% else %}#e8957a{% endif %};">
+                  {{ a.student.cgpa }}
+                </span>
+              </td>
+              <td>
+                <span class="badge
+                  {% if a.status == 'hired' %}badge-green
+                  {% elif a.status == 'shortlisted' %}badge-amber
+                  {% elif a.status == 'rejected' %}badge-red
+                  {% else %}badge-blue{% endif %}">
+                  {{ a.status }}
+                </span>
+              </td>
+              <td style="font-size:0.8rem;color:var(--muted);">{{ a.remarks or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">No applications yet for this drive.</div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Admin Console{% endblock %}

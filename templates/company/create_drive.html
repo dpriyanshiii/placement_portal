@@ -1,47 +1,88 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Create Drive</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <h1>Create Placement Drive</h1>
-  <a href="{{ url_for('company.dashboard') }}">Back to Dashboard</a>
+{% block title %}Create Drive{% endblock %}
 
-  <form method="POST" action="{{ url_for('company.create_drive') }}">
-    <p>
-      Drive Name:<br>
-      <input type="text" name="drive_name" required>
-    </p>
-    <p>
-      Job Title:<br>
-      <input type="text" name="job_title" required>
-    </p>
-    <p>
-      Job Description:<br>
-      <textarea name="job_description" required></textarea>
-    </p>
-    <p>
-      Eligibility Criteria:<br>
-      <textarea name="eligibility_criteria" required></textarea>
-    </p>
-    <p>
-      Salary:<br>
-      <input type="number" step="0.01" name="salary" required>
-    </p>
-    <p>
-      Location:<br>
-      <input type="text" name="location" required>
-    </p>
-    <p>
-      Application Deadline:<br>
-      <input type="datetime-local" name="deadline" required>
-    </p>
-    <p>
-      <button type="submit">Create Drive</button>
-    </p>
-  </form>
+{% block extra_head %}
+<style>
+  .page-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
+  .form-section {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.15s;
+    max-width: 700px;
+  }
+</style>
+{% endblock %}
 
-</body>
-</html>
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('company.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('company.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('company.profile') }}">Profile</a></li>
+    <li><a href="{{ url_for('company.create_drive') }}" class="active">New Drive</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge company">Company</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+
+  <header class="page-header" data-label="New">
+    <p class="page-header__eyebrow"><a href="{{ url_for('company.dashboard') }}" style="color:var(--amber);text-decoration:none;">← Dashboard</a></p>
+    <h1 class="page-header__title">Create Placement Drive</h1>
+    <p class="page-header__sub">Post a new opportunity for students to apply to.</p>
+  </header>
+
+  <div class="content">
+    <div class="form-section">
+      <form method="POST" action="{{ url_for('company.create_drive') }}">
+        <div class="form-grid">
+          <div class="field">
+            <label>Drive Name</label>
+            <input type="text" name="drive_name" placeholder="e.g. Summer Internship 2026" required>
+          </div>
+          <div class="field">
+            <label>Job Title</label>
+            <input type="text" name="job_title" placeholder="e.g. Software Engineer" required>
+          </div>
+          <div class="field span-2">
+            <label>Job Description</label>
+            <textarea name="job_description" placeholder="Describe the role and responsibilities…" required></textarea>
+          </div>
+          <div class="field span-2">
+            <label>Eligibility Criteria</label>
+            <textarea name="eligibility_criteria" placeholder="e.g. Minimum CGPA, eligible departments…" required></textarea>
+          </div>
+          <div class="field">
+            <label>Salary</label>
+            <input type="number" step="0.01" name="salary" placeholder="Annual CTC" required>
+          </div>
+          <div class="field">
+            <label>Location</label>
+            <input type="text" name="location" placeholder="e.g. Bengaluru" required>
+          </div>
+          <div class="field span-2">
+            <label>Application Deadline</label>
+            <input type="datetime-local" name="deadline" required>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Create Drive</button>
+          <a href="{{ url_for('company.dashboard') }}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Company Console{% endblock %}

@@ -1,26 +1,155 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Company Profile</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <a href="{{ url_for('company.dashboard') }}">Back to Dashboard</a>
+{% block title %}{{ company.company_name }}{% endblock %}
 
-  <h1>{{ company.company_name }}</h1>
+{% block extra_head %}
+<style>
+  .page-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
-  {% if company.logo %}
-    <img src="{{ url_for('static', filename=company.logo.replace('static/', '').replace('\\', '/')) }}" alt="Logo" width="100">
-  {% endif %}
+  .detail-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.1s;
+  }
+  .detail-hero__logo {
+    width: 80px; height: 80px;
+    object-fit: contain;
+    border-radius: var(--r);
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    padding: 0.5rem;
+    flex-shrink: 0;
+  }
+  .detail-hero__initials {
+    width: 80px; height: 80px;
+    border-radius: var(--r);
+    background: var(--line);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 900;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+  .detail-hero__name {
+    font-family: var(--font-display);
+    font-size: 2rem; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.2;
+  }
+  .detail-hero__meta {
+    color: var(--muted); font-size: 0.875rem; margin-top: 0.3rem;
+  }
+  .detail-hero__actions {
+    margin-left: auto;
+    display: flex; gap: 0.5rem; align-items: flex-start; flex-shrink: 0;
+  }
 
-  <p>Email: {{ company.email }}</p>
-  <p>Website: <a href="{{ company.website }}" target="_blank">{{ company.website }}</a></p>
-  <p>Description: {{ company.description }}</p>
-  <p>HR Name: {{ company.hr_fname }} {{ company.hr_lname }}</p>
-  <p>HR Email: {{ company.hr_email }}</p>
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.2s;
+  }
+</style>
+{% endblock %}
 
-  <a href="{{ url_for('company.edit_profile') }}">Edit Profile</a>
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('company.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('company.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('company.profile') }}" class="active">Profile</a></li>
+    <li><a href="{{ url_for('company.create_drive') }}">New Drive</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge company">Company</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
 
-</body>
-</html>
+{% block body %}
+<div class="page-wrap">
+
+  <header class="page-header" data-label="Profile">
+    <p class="page-header__eyebrow"><a href="{{ url_for('company.dashboard') }}" style="color:var(--amber);text-decoration:none;">← Dashboard</a></p>
+    <h1 class="page-header__title">Company Profile</h1>
+  </header>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="detail-hero">
+      {% if company.logo %}
+        <img src="{{ url_for('static', filename=company.logo.replace('static/', '').replace('\\', '/')) }}" alt="Logo" class="detail-hero__logo">
+      {% else %}
+        <div class="detail-hero__initials">{{ company.company_name[0] }}</div>
+      {% endif %}
+      <div>
+        <h2 class="detail-hero__name">{{ company.company_name }}</h2>
+        {% if company.website %}
+          <p class="detail-hero__meta"><a href="{{ company.website }}" target="_blank" style="color:var(--amber);">↗ {{ company.website }}</a></p>
+        {% endif %}
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+          <span class="badge badge-green">Approved</span>
+        </div>
+      </div>
+      <div class="detail-hero__actions">
+        <a href="{{ url_for('company.edit_profile') }}" class="btn btn-sm btn-outline">Edit Profile</a>
+      </div>
+    </div>
+
+    <!-- DETAIL CARDS -->
+    <div class="detail-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">Company Info</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Name</dt>
+            <dd>{{ company.company_name }}</dd>
+            <dt>Email</dt>
+            <dd>{{ company.email }}</dd>
+            <dt>Website</dt>
+            <dd>
+              {% if company.website %}
+                <a href="{{ company.website }}" target="_blank" style="color:var(--amber);">{{ company.website }}</a>
+              {% else %}—{% endif %}
+            </dd>
+            <dt>Description</dt>
+            <dd style="color:var(--muted);line-height:1.6;">{{ company.description or '—' }}</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">HR Contact</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Name</dt>
+            <dd>{{ company.hr_fname }} {{ company.hr_lname }}</dd>
+            <dt>Email</dt>
+            <dd>{{ company.hr_email }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Company Console{% endblock %}

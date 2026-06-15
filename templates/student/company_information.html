@@ -1,30 +1,138 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>{{ company.company_name }}</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
-  <br>
-  <a href="{{ url_for('student.history') }}">History</a>
-  <br>
-  <a href="{{ url_for('auth.logout') }}">Log Out</a>
+{% block title %}{{ company.company_name }}{% endblock %}
 
-  <h1>{{ company.company_name }}</h1>
-  <p>{{ company.description }}</p>
-  <p>Website: {{ company.website }}</p>
+{% block extra_head %}
+<style>
+  .page-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
-  <h2>Ongoing Drives</h2>
-  {% for d in drives %}
-    <p>
-      {{ loop.index }}. {{ d.drive_name }} | {{ d.job_title }} | Deadline: {{ d.deadline.strftime('%Y-%m-%d') }}
-      | <a href="{{ url_for('student.drive_view', drive_id=d.drive_id) }}">View Drive</a>
-    </p>
-  {% else %}
-    <p>No ongoing drives.</p>
-  {% endfor %}
+  .detail-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.1s;
+  }
+  .detail-hero__logo {
+    width: 80px; height: 80px;
+    object-fit: contain;
+    border-radius: var(--r);
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    padding: 0.5rem;
+    flex-shrink: 0;
+  }
+  .detail-hero__initials {
+    width: 80px; height: 80px;
+    border-radius: var(--r);
+    background: var(--line);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 900;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+  .detail-hero__name {
+    font-family: var(--font-display);
+    font-size: 2rem; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.2;
+  }
+  .detail-hero__meta {
+    color: var(--muted); font-size: 0.875rem; margin-top: 0.3rem;
+  }
 
-</body>
-</html>
+  .section {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.25s;
+  }
+</style>
+{% endblock %}
+
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('student.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('student.dashboard') }}" class="active">Dashboard</a></li>
+    <li><a href="{{ url_for('student.history') }}">History</a></li>
+    <li><a href="{{ url_for('student.profile') }}">Profile</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge student">Student</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+
+  <header class="page-header" data-label="Company">
+    <p class="page-header__eyebrow"><a href="{{ url_for('student.dashboard') }}" style="color:var(--amber);text-decoration:none;">← Dashboard</a></p>
+    <h1 class="page-header__title">{{ company.company_name }}</h1>
+  </header>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="detail-hero">
+      {% if company.logo %}
+        <img src="{{ url_for('static', filename=company.logo.replace('static/', '').replace('\\', '/')) }}" alt="Logo" class="detail-hero__logo">
+      {% else %}
+        <div class="detail-hero__initials">{{ company.company_name[0] }}</div>
+      {% endif %}
+      <div>
+        <h2 class="detail-hero__name">{{ company.company_name }}</h2>
+        {% if company.website %}
+          <p class="detail-hero__meta"><a href="{{ company.website }}" target="_blank" style="color:var(--amber);">↗ {{ company.website }}</a></p>
+        {% endif %}
+        {% if company.description %}
+          <p class="detail-hero__meta" style="margin-top:0.75rem;line-height:1.6;max-width:560px;">{{ company.description }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- DRIVES -->
+    <div class="section">
+      <div class="section-head">
+        <h2>Ongoing Drives</h2>
+        <span class="count">{{ drives | length }} open</span>
+      </div>
+
+      {% if drives %}
+      <div class="drive-grid">
+        {% for d in drives %}
+        <div class="drive-card">
+          <div>
+            <p class="drive-card__title">{{ d.drive_name }}</p>
+            <p class="drive-card__role">{{ d.job_title }}</p>
+          </div>
+          <div class="drive-card__meta">
+            {% if d.location %}<span class="badge badge-blue">{{ d.location }}</span>{% endif %}
+            {% if d.salary %}<span class="badge badge-amber">{{ d.salary }}</span>{% endif %}
+          </div>
+          <p class="drive-card__deadline">Deadline: {{ d.deadline.strftime('%d %b %Y') }}</p>
+          <div class="drive-card__actions">
+            <a href="{{ url_for('student.drive_view', drive_id=d.drive_id) }}" class="btn btn-sm btn-outline">View Drive →</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">No ongoing drives from this company right now.</div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Student Console{% endblock %}

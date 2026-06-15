@@ -1,41 +1,196 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Application Detail</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <a href="{{ url_for('company.drive_applications', drive_id=application.drive_id) }}">Back to Applications</a>
+{% block title %}Application Detail{% endblock %}
 
-  <h1>{{ application.student.f_name }} {{ application.student.l_name }}</h1>
-  <p>Email: {{ application.student.email }}</p>
-  <p>Department: {{ application.student.department }}</p>
-  <p>CGPA: {{ application.student.cgpa }}</p>
-  <p>Phone: {{ application.student.phone }}</p>
+{% block extra_head %}
+<style>
+  .page-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
-  {% if application.student.resume %}
-    <a href="{{ url_for('static', filename=application.student.resume.replace('static/', '').replace('\\', '/')) }}" target="_blank">View Resume</a>
-  {% endif %}
+  .detail-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.1s;
+  }
+  .detail-hero__avatar {
+    width: 72px; height: 72px;
+    border-radius: var(--r);
+    background: var(--line);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.6rem; font-weight: 900;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+  .detail-hero__name {
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.2;
+  }
+  .detail-hero__meta {
+    color: var(--muted); font-size: 0.875rem; margin-top: 0.3rem;
+  }
+  .detail-hero__actions {
+    margin-left: auto;
+    display: flex; gap: 0.5rem; align-items: flex-start; flex-shrink: 0;
+  }
 
-  <p>Applied On: {{ application.applied_time.strftime('%Y-%m-%d %H:%M') }}</p>
-  <p>Current Status: {{ application.status }}</p>
-  {% if application.remarks %}<p>Remarks: {{ application.remarks }}</p>{% endif %}
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.2s;
+  }
 
-  {% if not drive.status %}
-    <h2>Update Status</h2>
-    <form method="POST" action="{{ url_for('company.update_application', application_id=application.aplication_id) }}">
-      <select name="status">
-        <option value="waiting" {% if application.status == 'waiting' %}selected{% endif %}>Waiting</option>
-        <option value="shortlist" {% if application.status == 'shortlist' %}selected{% endif %}>Shortlist</option>
-        <option value="reject" {% if application.status == 'reject' %}selected{% endif %}>Reject</option>
-      </select>
-      <br>
-      <textarea name="remarks" placeholder="Remarks (optional)">{{ application.remarks or '' }}</textarea>
-      <br>
-      <button type="submit">Update</button>
-    </form>
-  {% endif %}
+  .update-section {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.3s;
+    max-width: 460px;
+  }
+</style>
+{% endblock %}
 
-</body>
-</html>
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('company.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('company.dashboard') }}" class="active">Dashboard</a></li>
+    <li><a href="{{ url_for('company.profile') }}">Profile</a></li>
+    <li><a href="{{ url_for('company.create_drive') }}">New Drive</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge company">Company</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+
+  <header class="page-header" data-label="Applicant">
+    <p class="page-header__eyebrow"><a href="{{ url_for('company.drive_applications', drive_id=application.drive_id) }}" style="color:var(--amber);text-decoration:none;">← Applications</a></p>
+    <h1 class="page-header__title">Application Detail</h1>
+  </header>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="detail-hero">
+      <div class="detail-hero__avatar">{{ application.student.f_name[0] }}{{ application.student.l_name[0] }}</div>
+      <div>
+        <h2 class="detail-hero__name">{{ application.student.f_name }} {{ application.student.l_name }}</h2>
+        <p class="detail-hero__meta">{{ application.student.email }}</p>
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+          <span class="badge
+            {% if application.status == 'hired' %}badge-green
+            {% elif application.status in ['shortlisted', 'shortlist'] %}badge-amber
+            {% elif application.status in ['rejected', 'reject'] %}badge-red
+            {% else %}badge-blue{% endif %}">
+            {{ application.status }}
+          </span>
+          <span class="badge badge-muted">{{ application.student.department }}</span>
+        </div>
+      </div>
+      <div class="detail-hero__actions">
+        {% if application.student.resume %}
+          <a href="{{ url_for('static', filename=application.student.resume.replace('static/', '').replace('\\', '/')) }}" target="_blank" class="btn btn-outline btn-sm">View Resume ↗</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- DETAIL CARDS -->
+    <div class="detail-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">Applicant Info</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Name</dt>
+            <dd>{{ application.student.f_name }} {{ application.student.l_name }}</dd>
+            <dt>Email</dt>
+            <dd>{{ application.student.email }}</dd>
+            <dt>Phone</dt>
+            <dd>{{ application.student.phone or '—' }}</dd>
+            <dt>Department</dt>
+            <dd>{{ application.student.department }}</dd>
+            <dt>CGPA</dt>
+            <dd style="font-family:var(--font-mono);color:{% if application.student.cgpa >= 8.0 %}#9fcd8a{% elif application.student.cgpa >= 6.5 %}var(--amber){% else %}#e8957a{% endif %};">{{ application.student.cgpa }}</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">Application Info</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Applied On</dt>
+            <dd style="font-family:var(--font-mono);font-size:0.85rem;">{{ application.applied_time.strftime('%d %b %Y, %H:%M') }}</dd>
+            <dt>Status</dt>
+            <dd>
+              <span class="badge
+                {% if application.status == 'hired' %}badge-green
+                {% elif application.status in ['shortlisted', 'shortlist'] %}badge-amber
+                {% elif application.status in ['rejected', 'reject'] %}badge-red
+                {% else %}badge-blue{% endif %}">
+                {{ application.status }}
+              </span>
+            </dd>
+            <dt>Remarks</dt>
+            <dd style="color:var(--muted);line-height:1.6;">{{ application.remarks or '—' }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPDATE STATUS -->
+    {% if not drive.status %}
+    <div class="update-section">
+      <div class="section-head">
+        <h2>Update Status</h2>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('company.update_application', application_id=application.aplication_id) }}">
+            <div style="display:flex;flex-direction:column;gap:1.25rem;">
+              <div class="field">
+                <label>Status</label>
+                <select name="status">
+                  <option value="waiting" {% if application.status == 'waiting' %}selected{% endif %}>Waiting</option>
+                  <option value="shortlist" {% if application.status == 'shortlist' %}selected{% endif %}>Shortlist</option>
+                  <option value="reject" {% if application.status == 'reject' %}selected{% endif %}>Reject</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Remarks</label>
+                <textarea name="remarks" placeholder="Optional remarks for the candidate…">{{ application.remarks or '' }}</textarea>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Update</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Company Console{% endblock %}

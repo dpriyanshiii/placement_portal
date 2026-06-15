@@ -1,38 +1,190 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>{{ drive.drive_name }}</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+{% block title %}{{ drive.drive_name }}{% endblock %}
 
-  <h1>{{ drive.drive_name }}</h1>
-  <p>Job Title: {{ drive.job_title }}</p>
-  <p>Job Description: {{ drive.job_description }}</p>
-  <p>Eligibility: {{ drive.eligibility_criteria }}</p>
-  <p>Salary: {{ drive.salary }}</p>
-  <p>Location: {{ drive.location }}</p>
-  <p>Deadline: {{ drive.deadline.strftime('%Y-%m-%d %H:%M') }}</p>
+{% block extra_head %}
+<style>
+  .page-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
-  <h2>Company</h2>
-  {% if company.logo %}
-    <img src="{{ url_for('static', filename=company.logo.replace('static/', '').replace('\\', '/')) }}" alt="Logo" width="80">
-  {% endif %}
-  <p>{{ company.company_name }}</p>
+  .detail-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.1s;
+  }
+  .detail-hero__logo {
+    width: 64px; height: 64px;
+    object-fit: contain;
+    border-radius: var(--r);
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    padding: 0.4rem;
+    flex-shrink: 0;
+  }
+  .detail-hero__initials {
+    width: 64px; height: 64px;
+    border-radius: var(--r);
+    background: var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.3rem; font-weight: 900;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+  .detail-hero__title {
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.2;
+  }
+  .detail-hero__actions {
+    margin-left: auto;
+    display: flex; gap: 0.5rem; align-items: flex-start; flex-shrink: 0;
+  }
 
-  {% if not applied %}
-    {% if not drive.status %}
-      <form method="POST" action="{{ url_for('student.apply_drive', drive_id=drive.drive_id) }}">
-        <button type="submit">Apply</button>
-      </form>
-    {% else %}
-      <p>This drive is closed.</p>
-    {% endif %}
-  {% else %}
-    <p>You have already applied to this drive.</p>
-  {% endif %}
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.2s;
+  }
 
-</body>
-</html>
+  .apply-section {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.3s;
+    max-width: 460px;
+  }
+
+  .status-note {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 1rem 1.25rem;
+    border-radius: var(--r);
+    border-left: 3px solid;
+  }
+  .status-note.applied { border-color: #7ec8e3; color: #7ec8e3; background: rgba(126,200,227,0.08); }
+  .status-note.closed  { border-color: var(--muted); color: var(--muted); background: var(--card-bg); }
+</style>
+{% endblock %}
+
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('student.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('student.dashboard') }}" class="active">Dashboard</a></li>
+    <li><a href="{{ url_for('student.history') }}">History</a></li>
+    <li><a href="{{ url_for('student.profile') }}">Profile</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge student">Student</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+
+  <header class="page-header" data-label="Drive">
+    <p class="page-header__eyebrow"><a href="{{ url_for('student.dashboard') }}" style="color:var(--amber);text-decoration:none;">← Dashboard</a></p>
+    <h1 class="page-header__title">Drive Detail</h1>
+  </header>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="detail-hero">
+      {% if company.logo %}
+        <img src="{{ url_for('static', filename=company.logo.replace('static/', '').replace('\\', '/')) }}" alt="Logo" class="detail-hero__logo">
+      {% else %}
+        <div class="detail-hero__initials">{{ company.company_name[0] }}</div>
+      {% endif %}
+      <div>
+        <p style="font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);margin-bottom:0.3rem;">
+          {{ company.company_name }}
+        </p>
+        <h2 class="detail-hero__title">{{ drive.drive_name }}</h2>
+        <p style="color:var(--muted);font-size:0.875rem;margin-top:0.3rem;">{{ drive.job_title }}</p>
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+          {% if drive.status %}
+            <span class="badge badge-muted">Closed</span>
+          {% else %}
+            <span class="badge badge-green">Ongoing</span>
+          {% endif %}
+          {% if drive.location %}
+            <span class="badge badge-blue">{{ drive.location }}</span>
+          {% endif %}
+          {% if drive.salary %}
+            <span class="badge badge-amber">{{ drive.salary }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAIL CARDS -->
+    <div class="detail-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">Drive Info</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Job Title</dt>
+            <dd>{{ drive.job_title }}</dd>
+            <dt>Location</dt>
+            <dd>{{ drive.location or '—' }}</dd>
+            <dt>Salary</dt>
+            <dd>{{ drive.salary or '—' }}</dd>
+            <dt>Deadline</dt>
+            <dd style="font-family:var(--font-mono);font-size:0.85rem;">{{ drive.deadline.strftime('%d %b %Y, %H:%M') }}</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">Requirements</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Eligibility</dt>
+            <dd style="color:var(--muted);line-height:1.6;">{{ drive.eligibility_criteria or '—' }}</dd>
+            <dt>Description</dt>
+            <dd style="color:var(--muted);line-height:1.6;">{{ drive.job_description or '—' }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPLY -->
+    <div class="apply-section">
+      <div class="section-head">
+        <h2>Application</h2>
+      </div>
+      {% if not applied %}
+        {% if not drive.status %}
+          <form method="POST" action="{{ url_for('student.apply_drive', drive_id=drive.drive_id) }}">
+            <button type="submit" class="btn btn-primary btn-lg">Apply →</button>
+          </form>
+        {% else %}
+          <div class="status-note closed">This drive is closed.</div>
+        {% endif %}
+      {% else %}
+        <div class="status-note applied">You have already applied to this drive.</div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Student Console{% endblock %}

@@ -1,44 +1,267 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>{{ company.company_name }}</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <a href="{{ url_for('admin.manage_companies') }}">Back to Companies</a>
+{% block title %}{{ company.company_name }}{% endblock %}
 
-  <h1>{{ company.company_name }}</h1>
+{% block extra_head %}
+<style>
+  .admin-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
 
-  {% if company.logo %}
-    <img src="{{ url_for('static', filename=company.logo.replace('static/', '')) }}" alt="Logo" width="100">
-  {% endif %}
+  .detail-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.1s;
+  }
+  .detail-hero__logo {
+    width: 80px; height: 80px;
+    object-fit: contain;
+    border-radius: var(--r);
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    padding: 0.5rem;
+    flex-shrink: 0;
+  }
+  .detail-hero__initials {
+    width: 80px; height: 80px;
+    border-radius: var(--r);
+    background: var(--line);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.8rem; font-weight: 900;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+  .detail-hero__name {
+    font-family: var(--font-display);
+    font-size: 2rem; font-weight: 700;
+    letter-spacing: -0.02em; line-height: 1.2;
+  }
+  .detail-hero__meta {
+    color: var(--muted); font-size: 0.875rem; margin-top: 0.3rem;
+  }
+  .detail-hero__actions {
+    margin-left: auto;
+    display: flex; gap: 0.5rem; align-items: flex-start; flex-shrink: 0;
+  }
 
-  <p>Website: {{ company.website }}</p>
-  <p>Description: {{ company.description }}</p>
-  <p>HR: {{ company.hr_fname }} {{ company.hr_lname }} | {{ company.hr_email }}</p>
-  <p>Status:
-    {% if company.is_blacklisted %} Blacklisted
-    {% elif company.approval_status %} Approved
-    {% else %} Pending
-    {% endif %}
-  </p>
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.2s;
+  }
 
-  <a href="{{ url_for('admin.blacklist_company', company_id=company.company_id) }}">
-    {% if company.is_blacklisted %} Remove Blacklist {% else %} Blacklist {% endif %}
+  .drives-section {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.35s;
+  }
+
+  /* company stats row */
+  .co-stats {
+    display: flex;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.25s;
+  }
+  .co-stat {
+    flex: 1;
+    background: var(--card-bg);
+    padding: 1rem 1.25rem;
+    text-align: center;
+  }
+  .co-stat__num {
+    font-family: var(--font-display);
+    font-size: 1.75rem; font-weight: 900;
+    color: var(--amber);
+  }
+  .co-stat__label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted);
+    margin-top: 0.2rem;
+  }
+</style>
+{% endblock %}
+
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('admin.dashboard') }}" class="topbar__brand">
+    Placement Portal
   </a>
-  
-  {% if company.approval_status %}
-  <h2>Drives</h2>
-  <p>Total: {{ total_drives }} | Ongoing: {{ ongoing_drives }} | Students Hired: {{ students_hired }}</p>
-  {% for d in drives %}
-    <p>{{ loop.index }}. {{ d.drive_name }} | {{ d.job_title }} | Deadline: {{ d.deadline.strftime('%Y-%m-%d') }} |
-      {% if d.status %} Completed {% else %} Ongoing {% endif %}
-    </p>
-  {% else %}
-    <p>No drives yet.</p>
-  {% endfor %}
-  {% endif %}
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('admin.manage_students') }}">Students</a></li>
+    <li><a href="{{ url_for('admin.manage_companies') }}" class="active">Companies</a></li>
+    <li><a href="{{ url_for('admin.manage_drives') }}">Drives</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge admin">Admin</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
 
-</body>
-</html>
+{% block body %}
+<div class="admin-wrap">
+
+  <header class="page-header" data-label="Company">
+    <p class="page-header__eyebrow"><a href="{{ url_for('admin.manage_companies') }}" style="color:var(--amber);text-decoration:none;">← Companies</a></p>
+    <h1 class="page-header__title">Company Profile</h1>
+  </header>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="detail-hero">
+      {% if company.logo %}
+        <img src="{{ url_for('static', filename=company.logo.replace('static/', '')) }}" alt="Logo" class="detail-hero__logo">
+      {% else %}
+        <div class="detail-hero__initials">{{ company.company_name[0] }}</div>
+      {% endif %}
+      <div>
+        <h2 class="detail-hero__name">{{ company.company_name }}</h2>
+        {% if company.website %}
+          <p class="detail-hero__meta"><a href="{{ company.website }}" target="_blank" style="color:var(--amber);">↗ {{ company.website }}</a></p>
+        {% endif %}
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+          {% if company.is_blacklisted %}
+            <span class="badge badge-red">Blacklisted</span>
+          {% elif company.approval_status %}
+            <span class="badge badge-green">Approved</span>
+          {% else %}
+            <span class="badge badge-amber">Pending</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="detail-hero__actions">
+        {% if not company.approval_status and not company.is_blacklisted %}
+          <a href="{{ url_for('admin.approve_company', company_id=company.company_id) }}"
+             class="btn btn-sm" style="background:rgba(79,140,68,0.15);color:#9fcd8a;border-color:rgba(79,140,68,0.3);">Approve</a>
+          <a href="{{ url_for('admin.reject_company', company_id=company.company_id) }}"
+             class="btn btn-sm btn-danger"
+             onclick="return confirm('Reject {{ company.company_name }}?');">Reject</a>
+        {% endif %}
+        <a href="{{ url_for('admin.blacklist_company', company_id=company.company_id) }}"
+           class="btn btn-sm {% if company.is_blacklisted %}btn-outline{% else %}btn-danger{% endif %}"
+           onclick="return confirm('{% if company.is_blacklisted %}Remove blacklist from{% else %}Blacklist{% endif %} {{ company.company_name }}?');">
+          {% if company.is_blacklisted %}Remove Blacklist{% else %}Blacklist{% endif %}
+        </a>
+      </div>
+    </div>
+
+    <!-- DETAIL CARDS -->
+    <div class="detail-grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">Company Info</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Name</dt>
+            <dd>{{ company.company_name }}</dd>
+            <dt>Website</dt>
+            <dd>
+              {% if company.website %}
+                <a href="{{ company.website }}" target="_blank" style="color:var(--amber);">{{ company.website }}</a>
+              {% else %}—{% endif %}
+            </dd>
+            <dt>Description</dt>
+            <dd style="color:var(--muted);line-height:1.6;">{{ company.description or '—' }}</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-header__title">HR Contact</span>
+        </div>
+        <div class="card-body">
+          <dl class="kv-list">
+            <dt>Name</dt>
+            <dd>{{ company.hr_fname }} {{ company.hr_lname }}</dd>
+            <dt>Email</dt>
+            <dd>{{ company.hr_email }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRIVES (only if approved) -->
+    {% if company.approval_status %}
+    <div class="co-stats">
+      <div class="co-stat">
+        <p class="co-stat__num">{{ total_drives }}</p>
+        <p class="co-stat__label">Total Drives</p>
+      </div>
+      <div class="co-stat">
+        <p class="co-stat__num">{{ ongoing_drives }}</p>
+        <p class="co-stat__label">Ongoing</p>
+      </div>
+      <div class="co-stat">
+        <p class="co-stat__num">{{ students_hired }}</p>
+        <p class="co-stat__label">Students Hired</p>
+      </div>
+    </div>
+
+    <div class="drives-section">
+      <div class="section-head">
+        <h2>Placement Drives</h2>
+        <span class="count">{{ drives | length }} drive{{ 's' if drives | length != 1 else '' }}</span>
+      </div>
+
+      {% if drives %}
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Drive Name</th>
+              <th>Job Title</th>
+              <th>Deadline</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in drives %}
+            <tr style="cursor:pointer;" onclick="window.location='{{ url_for('admin.drive_detail', drive_id=d.drive_id) }}'">
+              <td class="text-mono" style="color:var(--muted);">{{ loop.index }}</td>
+              <td style="font-weight:500;">{{ d.drive_name }}</td>
+              <td class="text-mono" style="font-size:0.8rem;color:var(--muted);">{{ d.job_title }}</td>
+              <td class="text-mono" style="font-size:0.78rem;color:var(--muted);">{{ d.deadline.strftime('%d %b %Y') }}</td>
+              <td>
+                {% if d.status %}
+                  <span class="badge badge-muted">Completed</span>
+                {% else %}
+                  <span class="badge badge-green">Ongoing</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">No drives posted yet.</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Admin Console{% endblock %}

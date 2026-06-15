@@ -1,26 +1,99 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Application History</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+{% block title %}Application History{% endblock %}
 
-  <h1>{{ student.f_name }} {{ student.l_name }}</h1>
-  <p>Department: {{ student.department }}</p>
-
-  <h2>Application History</h2>
-  {% for a in applications %}
-    <p>
-      {{ loop.index }}. {{ a.drive.drive_name }} | {{ a.drive.job_title }} |
-      Status: {{ a.status }}
-      {% if a.remarks %} | Remarks: {{ a.remarks }} {% endif %}
-    </p>
-  {% else %}
-    <p>No application history yet.</p>
+{% block extra_head %}
+<style>
+  .page-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
+  .apps-section {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.15s;
+  }
+  .data-table tbody tr {
+    opacity: 0;
+    animation: fadeUp 0.35s ease forwards;
+  }
+  {% for i in range(1, 30) %}
+  .data-table tbody tr:nth-child({{ i }}) { animation-delay: {{ 0.2 + i * 0.03 }}s; }
   {% endfor %}
+</style>
+{% endblock %}
 
-</body>
-</html>
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('student.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('student.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('student.history') }}" class="active">History</a></li>
+    <li><a href="{{ url_for('student.profile') }}">Profile</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge student">Student</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+
+  <header class="page-header" data-label="History">
+    <p class="page-header__eyebrow"><a href="{{ url_for('student.dashboard') }}" style="color:var(--amber);text-decoration:none;">← Dashboard</a></p>
+    <h1 class="page-header__title">Application History</h1>
+    <p class="page-header__sub">{{ student.f_name }} {{ student.l_name }} · {{ student.department }}</p>
+  </header>
+
+  <div class="content">
+    <div class="apps-section">
+      <div class="section-head">
+        <h2>All Applications</h2>
+        <span class="count">{{ applications | length }} record{{ 's' if applications | length != 1 else '' }}</span>
+      </div>
+
+      {% if applications %}
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Drive</th>
+              <th>Job Title</th>
+              <th>Status</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in applications %}
+            <tr>
+              <td class="text-mono" style="color:var(--muted);">{{ loop.index }}</td>
+              <td style="font-weight:500;">{{ a.drive.drive_name }}</td>
+              <td class="text-mono" style="font-size:0.8rem;color:var(--muted);">{{ a.drive.job_title }}</td>
+              <td>
+                <span class="badge
+                  {% if a.status == 'hired' %}badge-green
+                  {% elif a.status in ['shortlisted', 'shortlist'] %}badge-amber
+                  {% elif a.status in ['rejected', 'reject'] %}badge-red
+                  {% else %}badge-blue{% endif %}">
+                  {{ a.status }}
+                </span>
+              </td>
+              <td style="font-size:0.8rem;color:var(--muted);">{{ a.remarks or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">No application history yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Student Console{% endblock %}

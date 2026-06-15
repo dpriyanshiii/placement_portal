@@ -1,40 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Edit Profile</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-  <a href="{{ url_for('company.profile') }}">Back to Profile</a>
+{% block title %}Edit Profile{% endblock %}
 
-  <h1>Edit Profile</h1>
+{% block extra_head %}
+<style>
+  .page-wrap {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.05s;
+  }
+  .form-section {
+    opacity: 0;
+    animation: fadeUp 0.45s ease forwards 0.15s;
+  }
+</style>
+{% endblock %}
 
-  <form method="POST" action="{{ url_for('company.edit_profile') }}">
-    <p>
-      HR First Name:<br>
-      <input type="text" name="hr_fname" value="{{ company.hr_fname }}" required>
-    </p>
-    <p>
-      HR Last Name:<br>
-      <input type="text" name="hr_lname" value="{{ company.hr_lname }}" required>
-    </p>
-    <p>
-      HR Email:<br>
-      <input type="email" name="hr_email" value="{{ company.hr_email }}" required>
-    </p>
-    <p>
-      Website:<br>
-      <input type="text" name="website" value="{{ company.website or '' }}">
-    </p>
-    <p>
-      Description:<br>
-      <textarea name="description">{{ company.description or '' }}</textarea>
-    </p>
-    <p>
-      <button type="submit">Save Changes</button>
-    </p>
-  </form>
+{% block topbar %}
+<nav class="topbar">
+  <a href="{{ url_for('company.dashboard') }}" class="topbar__brand">
+    Placement Portal
+  </a>
+  <ul class="topbar__nav">
+    <li><a href="{{ url_for('company.dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('company.profile') }}" class="active">Profile</a></li>
+    <li><a href="{{ url_for('company.create_drive') }}">New Drive</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span class="topbar__role-badge company">Company</span>
+    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline btn-sm">Logout</a>
+  </div>
+</nav>
+{% endblock %}
 
-</body>
-</html>
+{% block body %}
+<div class="page-wrap">
+
+  <header class="page-header" data-label="Edit">
+    <p class="page-header__eyebrow"><a href="{{ url_for('company.profile') }}" style="color:var(--amber);text-decoration:none;">← Profile</a></p>
+    <h1 class="page-header__title">Edit Profile</h1>
+    <p class="page-header__sub">Update your HR contact and company description.</p>
+  </header>
+
+  <div class="content">
+    <div class="form-section">
+      <form method="POST" action="{{ url_for('company.edit_profile') }}">
+        <div class="form-grid">
+          <div class="field">
+            <label>HR First Name</label>
+            <input type="text" name="hr_fname" value="{{ company.hr_fname }}" required>
+          </div>
+          <div class="field">
+            <label>HR Last Name</label>
+            <input type="text" name="hr_lname" value="{{ company.hr_lname }}" required>
+          </div>
+          <div class="field span-2">
+            <label>HR Email</label>
+            <input type="email" name="hr_email" value="{{ company.hr_email }}" required>
+          </div>
+          <div class="field span-2">
+            <label>Website</label>
+            <input type="text" name="website" value="{{ company.website or '' }}" placeholder="https://example.com">
+          </div>
+          <div class="field span-2">
+            <label>Description</label>
+            <textarea name="description" placeholder="Tell students about your company…">{{ company.description or '' }}</textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <a href="{{ url_for('company.profile') }}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_right %}Company Console{% endblock %}
